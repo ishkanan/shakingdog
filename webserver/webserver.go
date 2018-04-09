@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func NewServer(addr, caPath, roURL string, certPaths, keyPaths []string) (*http.Server, net.Listener, error) {
+func NewServer(addr, caPath, certPaths, keyPaths []string) (*http.Server, net.Listener, error) {
 	config := &tls.Config{
 		PreferServerCipherSuites: true,
 		SessionTicketsDisabled:   true,

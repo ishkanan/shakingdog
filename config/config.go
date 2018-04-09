@@ -5,8 +5,7 @@ import (
 	"io/ioutil"
 )
 
-// Server contains the configuration information required to start a
-// redoctober server.
+// Server contains the configuration information required to start the app
 type Server struct {
 	// The host:port that the server should listen on
 	Addr string `json:"address"`
@@ -32,34 +31,6 @@ type Server struct {
 	DBName string `json:"dbname"`
 	DBUserName string `json:"dbuser"`
 	DBPassword string `json:"dbpass"`
-
-	// Parent recordings folder
-	RecordingsFolder string `'json:"recordingspath"`
-
-	// Enable endpoint for direct key operations
-	KeyEndpointEnabled bool `json:"keyepenabled"`
-	// Secret API key to auth the key endpoint
-	KeyEndpointAPIKey string `json:"keyepapikey"`
-
-	// RedOctober server URL
-	ROServer string `json:"roserver"`
-	// Path to the RedOctober public certificate file
-	ROCertFile string `json:"rocertfile"`
-	// CallPicker2 user credentials in RedOctober
-	ROUserName string `json:"rousername"`
-	ROPassword string `json:"ropassword"`
-	// Minimum users required to decrypt a key
-	ROMinimumUsers int `json:"rominusers"`
-	// Users that can delegate permission to RedOctober to decrypt data
-	RODelegates []string `json:"rodelegates"`
-}
-
-// Transcoder information
-type Transcoder struct {
-	// The transcoder program/binary
-	Executable string `json:"executable"`
-	// Arguments for the transcoder
-	Args []string `json:"args"`
 }
 
 // Okta contains Okta related configuration information
@@ -80,7 +51,6 @@ type Okta struct {
 type Config struct {
 	Server     *Server     `json:"server"`
 	Okta       *Okta       `json:"okta"`
-	Transcoder *Transcoder `json:"transcoder"`
 }
 
 // Valid returns true if the configuration is valid
@@ -103,7 +73,6 @@ func New() *Config {
 	return &Config{
 		Server:     &Server{},
 		Okta:       &Okta{},
-		Transcoder: &Transcoder{},
 	}
 }
 

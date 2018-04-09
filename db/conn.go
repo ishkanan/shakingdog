@@ -5,8 +5,8 @@ import (
   "fmt"
   "time"
 
-  // imported to init and register the MS SQL driver
-  _ "github.com/minus5/gofreetds"
+  // imported to init and register the MySQL driver
+  _ "github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -16,16 +16,16 @@ const (
 )
 
 
-func NewMSSQLConn(host, database, user, pass string) (*sql.DB, error) {
+func NewMySQLConn(host, database, user, pass string) (*sql.DB, error) {
   // returns a new SQL connection pool controller
   connectionString := fmt.Sprintf(
-    "Server=%s;Database=%s;User Id=%s;Password=%s",
-    host,
-    database,
+    "%s:%s@%s/%s",
     user,
     pass,
+    host,
+    database,
   )
-  dbConn, err := sql.Open("mssql", connectionString)
+  dbConn, err := sql.Open("mysql", connectionString)
   if err != nil {
     return nil, err
   }

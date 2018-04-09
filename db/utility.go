@@ -24,15 +24,3 @@ func InterfacesToValues(interfaces []interface{}) ([]string) {
   }
   return values
 }
-
-func UTCToSQL2005(timestamp string) (string, error) {
-  // parses an RFC3339 representation of a UTC time and returns
-  // a representation of the same timestamp in the local timezone
-  // that is compatible with SQL Server 2005
-
-  parsed, err := time.Parse(time.RFC3339, timestamp)
-  if err != nil {
-    return "", err
-  }
-  return fmt.Sprintf("%s", parsed.Local())[0:19], nil
-}
