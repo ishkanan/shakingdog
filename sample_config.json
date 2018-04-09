@@ -1,0 +1,37 @@
+{
+    "server": {
+        "address": "0.0.0.0:3000",
+        "publichost": "<myhost>:<myport>",
+        "baseurl": "",
+        "staticpath": "/srv/www/static/callpicker2",
+        "capath": "",
+        "private_keys": "",
+        "certificates": "",
+        "dbhost": "mel0dbs05lp",
+        "dbname": "callpicker2",
+        "dbuser": "callpicker2_webuser",
+        "dbpass": "",
+        "recordingsfolder": "/mnt/recordings",
+        "keyepenabled": false,
+        "keyepapikey": "",
+        "roserver": "",
+        "rocertfile": "",
+        "rousername": "",
+        "ropassword": "",
+        "rominusers": 2,
+        "rodelegates": []
+    },
+
+    "okta": {
+        "host": "",
+        "clientid": "",
+        "clientsecret": "",
+        "loginpath": "/login",
+        "authpath": "/authorization/callback"
+    },
+
+    "transcoder": {
+        "executable": "",
+        "args": [""]
+    }
+}
