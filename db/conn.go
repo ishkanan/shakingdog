@@ -19,7 +19,7 @@ const (
 func NewMySQLConn(host, database, user, pass string) (*sql.DB, error) {
   // returns a new SQL connection pool controller
   connectionString := fmt.Sprintf(
-    "%s:%s@%s/%s",
+    "%s:%s@tcp(%s)/%s",
     user,
     pass,
     host,

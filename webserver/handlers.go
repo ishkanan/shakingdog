@@ -27,7 +27,7 @@ type Dogs struct {
 
 type DogReport struct {
   Dog db.Dog `json:"dog"`
-  FamilyAsChild db.Family `json:"familyaschild"`
+  FamilyAsChild *db.Family `json:"familyaschild"`
   FamiliesAsParent []db.Family `json:"familiesasparent"`
 }
 
@@ -132,6 +132,25 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
     return
   }
 
+  // fetch children (if any)
+  children, err := db.GetChildren(
+    ctx.DBConnection,
+    sireId,
+    damId,
+  )
+  if err != nil {
+    log.Printf("ERROR: FamilyHandler: GetChildren error - %v", err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+
+  // no children means the sire/dam combo is not a thing because
+  // every couple has at least one child if they are in the DB
+  if len(children) == 0 {
+    w.WriteHeader(http.StatusNotFound)
+    return
+  }
+
   // fetch parents
   sire, err := db.GetDog(ctx.DBConnection, sireId)
   if err != nil {
@@ -145,13 +164,6 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
     w.WriteHeader(http.StatusInternalServerError)
     return
   }
-
-  // fetch children
-  children, err := db.GetChildren(
-    ctx.DBConnection,
-    sireId,
-    damId,
-  )
 
   // all done
   w.Header().Set("Content-Type", "application/json")

@@ -44,8 +44,12 @@ func _DogsFromRows(rows *sql.Rows) ([]Dog, error) {
 func GetDogs(dbConn *sql.DB) ([]Dog, error) {
   // fetches all dogs
   rows, err := dbConn.Query(`
-    SELECT id, name, gender, shakingdogstatus, cecsstatus
-    FROM dog`,
+    SELECT d.id, d.name, d.gender, s1.status, s2.status
+    FROM dog d
+    JOIN ailmentstatus s1
+      ON d.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON d.cecsstatusid = s2.id`,
   )
   if err != nil {
     return nil, err
@@ -63,9 +67,13 @@ func GetDogs(dbConn *sql.DB) ([]Dog, error) {
 func GetDog(dbConn *sql.DB, id int) (dog Dog, err error) {
   // fetches an individual dog
   err = dbConn.QueryRow(`
-    SELECT id, name, gender, shakingdogstatus, cecsstatus
-    FROM dog
-    WHERE id = ?`,
+    SELECT d.id, d.name, d.gender, s1.status, s2.status
+    FROM dog d
+    JOIN ailmentstatus s1
+      ON d.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON d.cecsstatusid = s2.id
+    WHERE d.id = ?`,
     id,
   ).Scan(
     &dog.Id,
@@ -80,10 +88,14 @@ func GetDog(dbConn *sql.DB, id int) (dog Dog, err error) {
 func GetSires(dbConn *sql.DB, damId int) ([]Dog, error) {
   // fetches all Sires that have mated with a particular Dam
   rows, err := dbConn.Query(`
-    SELECT d.id, d.name, d.gender, d.shakingdogstatus, d.cecsstatus
+    SELECT d.id, d.name, d.gender, s1.status, s2.status
     FROM relationship r
     JOIN dog d
       ON r.sireid = d.id
+    JOIN ailmentstatus s1
+      ON d.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON d.cecsstatusid = s2.id
     WHERE r.damid = ?`,
     damId,
   )
@@ -103,10 +115,14 @@ func GetSires(dbConn *sql.DB, damId int) ([]Dog, error) {
 func GetDams(dbConn *sql.DB, sireId int) ([]Dog, error) {
   // fetches all Dams that have mated with a particular Sire
   rows, err := dbConn.Query(`
-    SELECT d.id, d.name, d.gender, d.shakingdogstatus, d.cecsstatus
+    SELECT d.id, d.name, d.gender, s1.status, s2.status
     FROM relationship r
     JOIN dog d
       ON r.damid = d.id
+    JOIN ailmentstatus s1
+      ON d.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON d.cecsstatusid = s2.id
     WHERE r.sireid = ?`,
     sireId,
   )
@@ -126,10 +142,14 @@ func GetDams(dbConn *sql.DB, sireId int) ([]Dog, error) {
 func GetChildren(dbConn *sql.DB, sireId, damId int) ([]Dog, error) {
   // fetches all children of a sire/dam pair
   rows, err := dbConn.Query(`
-    SELECT d.id, d.name, d.gender, d.shakingdogstatus, d.cecsstatus
+    SELECT d.id, d.name, d.gender, s1.status, s2.status
     FROM relationship r
     JOIN dog d
       ON r.childid = d.id
+    JOIN ailmentstatus s1
+      ON d.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON d.cecsstatusid = s2.id
     WHERE r.sireid = ?
     AND r.damid = ?`,
     sireId,
@@ -151,13 +171,21 @@ func GetChildren(dbConn *sql.DB, sireId, damId int) ([]Dog, error) {
 func GetParents(dbConn *sql.DB, childId int) (sire Dog, dam Dog, err error) {
   // fetches the parents of a child
   err = dbConn.QueryRow(`
-    SELECT sire.id, sire.name, sire.gender, sire.shakingdogstatus, sire.cecsstatus,
-           dam.id, dam.name, dam.gender, dam.shakingdogstatus, dam.cecsstatus
+    SELECT sire.id, sire.name, sire.gender, s1.status, s2.status,
+           dam.id, dam.name, dam.gender, s3.status, s4.status
     FROM relationship r
     JOIN dog sire
       ON r.sireid = sire.id
+    JOIN ailmentstatus s1
+      ON sire.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON sire.cecsstatusid = s2.id
     JOIN dog dam
       ON r.damid = dam.id
+    JOIN ailmentstatus s3
+      ON dam.shakingdogstatusid = s3.id
+    JOIN ailmentstatus s4
+      ON dam.cecsstatusid = s4.id
     WHERE r.childid = ?`,
     childId,
   ).Scan(
@@ -178,13 +206,17 @@ func GetParents(dbConn *sql.DB, childId int) (sire Dog, dam Dog, err error) {
 func GetSiblings(dbConn *sql.DB, dogId int) ([]Dog, error) {
   // fetches all siblings of a particular dog
   rows, err := dbConn.Query(`
-    SELECT d.id, d.name, d.gender, d.shakingdogstatus, d.cecsstatus
+    SELECT d.id, d.name, d.gender, s1.status, s2.status
     FROM relationship r1
     JOIN relationship r2
       ON r1.sireid = r2.sireid
       AND r1.damid = r2.damid
     JOIN dog d
       ON d.id = r2.childid
+    JOIN ailmentstatus s1
+      ON d.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON d.cecsstatusid = s2.id
     WHERE r1.childid = ?
     AND r2.childid <> ?`,
     dogId,
@@ -237,6 +269,7 @@ func GetFamiliesOfSire(dbConn *sql.DB, sireId int) ([]Family, error) {
     if err != nil {
       return nil, err
     }
+    families = append(families, family)
   }
   return families, nil
 }
@@ -260,21 +293,23 @@ func GetFamiliesOfDam(dbConn *sql.DB, damId int) ([]Family, error) {
     if err != nil {
       return nil, err
     }
+    families = append(families, family)
   }
   return families, nil
 }
 
-func GetFamilies(dbConn *sql.DB, dogId int) (Family, []Family, error) {
+func GetFamilies(dbConn *sql.DB, dogId int) (*Family, []Family, error) {
   // fetches all families where a dog was either a parent or a sibling
   dog, err := GetDog(dbConn, dogId)
   if err != nil {
-    return Family{}, nil, err
+    return nil, nil, err
   }
 
   // family where dog was sibling
+  // note: can be orphan if no record of family
   familyAsChild, err := GetFamilyOfChild(dbConn, dogId)
-  if err != nil {
-    return Family{}, nil, err
+  if err != sql.ErrNoRows && err != nil {
+    return nil, nil, err
   }
 
   // families where dog was parent
@@ -285,9 +320,12 @@ func GetFamilies(dbConn *sql.DB, dogId int) (Family, []Family, error) {
     familiesAsParent, err = GetFamiliesOfDam(dbConn, dogId)
   }
   if err != sql.ErrNoRows && err != nil {
-    return Family{}, nil, err
+    return nil, nil, err
   }
 
   // all done
-  return familyAsChild, familiesAsParent, nil
+  if familyAsChild.Sire.Id == 0 {
+    return nil, familiesAsParent, nil
+  }
+  return &familyAsChild, familiesAsParent, nil
 }
