@@ -124,58 +124,33 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 			http.FileServer(http.Dir(cfg.Server.StaticPath))),
 	)
 
-	// tenant fetch
-	router.Handle(
-		fmt.Sprintf("%s/api/tenants", cfg.Server.BaseURL),
-		oktaAuth.SecuredHandler(
-			HandlerWithContext(webserver.TenantsHandler),
-			HandlerWithContext(webserver.NeedAuthHandler),
-	))
+	// multiple dogs fetch
+	router.HandleFunc(
+		fmt.Sprintf("%s/api/dogs", cfg.Server.BaseURL),
+		HandlerWithContext(webserver.DogsHandler),
+	)
 
-	// column fetch
-	router.Handle(
-		fmt.Sprintf("%s/api/columns", cfg.Server.BaseURL),
-		oktaAuth.SecuredHandler(
-			HandlerWithContext(webserver.ColumnsHandler),
-			HandlerWithContext(webserver.NeedAuthHandler),
-	))
+	// single dog fetch
+	router.HandleFunc(
+		fmt.Sprintf("%s/api/dog/{id:[0-9]+}", cfg.Server.BaseURL),
+		HandlerWithContext(webserver.DogHandler),
+	)
 
-	// counts fetch
-	router.Handle(
-		fmt.Sprintf("%s/api/counts", cfg.Server.BaseURL),
+	// shaking dog admin
+/*	router.Handle(
+		fmt.Sprintf("%s/api/admin/shakingdog", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(webserver.CountsHandler),
+			HandlerWithContext(webserver.ShakingDogHandler),
 			HandlerWithContext(webserver.NeedAuthHandler),
-	))
+	))*/
 
-	// search
-	router.Handle(
-		fmt.Sprintf("%s/api/search", cfg.Server.BaseURL),
+	// cecs admin
+/*	router.Handle(
+		fmt.Sprintf("%s/api/admin/cecs", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(webserver.SearchHandler),
+			HandlerWithContext(webserver.CecsHandler),
 			HandlerWithContext(webserver.NeedAuthHandler),
-	))
-
-	// listen / download
-	// append ".mp3" so browsers pick the correct extension
-	// when showing the download file dialog
-	router.Handle(
-		fmt.Sprintf("%s/api/recording.mp3", cfg.Server.BaseURL),
-		oktaAuth.SecuredHandler(
-			HandlerWithContext(webserver.RecordingHandler),
-			HandlerWithContext(webserver.NeedAuthHandler),
-	))
-
-	// protected via APIKEY based auth
-	if cfg.Server.KeyEndpointEnabled {
-		// This API is used to interact with keys.
-		// It should NOT be enabled in production!
-		router.Handle(
-			fmt.Sprintf("%s/api/key", cfg.Server.BaseURL),
-			HandlerWithContext(webserver.KeysHandler),
-		)
-		log.Printf("WARN: Key endpoint API is enabled!")
-	}
+	))*/
 
 	// sets the state cookie and bounces user to the Okta login page
 	router.Handle(
