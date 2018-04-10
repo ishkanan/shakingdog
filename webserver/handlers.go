@@ -1,26 +1,40 @@
 package webserver
 
 import (
-  "bytes"
   "database/sql"
   "encoding/json"
   "fmt"
   "log"
   "net/http"
-  "net/url"
-  "regexp"
   "strconv"
-  "strings"
 
-  "joker.salmat.com.au/srv/repo/callpicker2/auth"
-  "joker.salmat.com.au/srv/repo/callpicker2/config"
-  "joker.salmat.com.au/srv/repo/callpicker2/db"
+  "bitbucket.org/Rusty1958/shakingdog/auth"
+  "bitbucket.org/Rusty1958/shakingdog/config"
+  "bitbucket.org/Rusty1958/shakingdog/db"
+
+  "github.com/gorilla/mux"
 )
 
 type HandlerContext struct {
   Config *config.Config
   DBConnection *sql.DB
   Okta *auth.Okta
+}
+
+type Dogs struct {
+  Dogs []db.Dog `json:"dogs"`
+}
+
+type DogReport struct {
+  Dog db.Dog `json:"dog"`
+  FamilyAsChild db.Family `json:"familyaschild"`
+  FamiliesAsParent []db.Family `json:"familiesasparent"`
+}
+
+type CouplesReport struct {
+  Sire db.Dog `json:"sire"`
+  Dam db.Dog `json:"dam"`
+  Children []db.Dog `json:"children"`
 }
 
 type Redirect struct {
@@ -43,39 +57,56 @@ func NeedAuthHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerConte
 }
 
 func DogsHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
-  // validate query params
-  params, err := ParseAndUnescape(req.URL.RawQuery)
-  if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
-    return
-  }
-  err = ExpectKeys(
-    params,
-    []string{"id"},
-  )
-
-  // get dogs based on optional ID filter
-  var dogs []db.Dog
-  if err != nil {
-    dogs, err = db.GetDogs(ctx.DBConnection, params["id"])
-  } else {
-    dogs, err = db.GetDogs(ctx.DBConnection)
-  }
+  // fetch all dogs
+  dogs, err := db.GetDogs(ctx.DBConnection)
   if err == sql.ErrNoRows {
-    w.WriteHeader(http.StatusBadRequest)
-    return
+    dogs = []db.Dog{}
   } else if err != nil {
-    log.Printf("ERROR: KeysHandler: GetTenantFromKey error - %v", err)
+    log.Printf("ERROR: DogsHandler: GetDogs error - %v", err)
     w.WriteHeader(http.StatusInternalServerError)
     return
   }
 
   w.Header().Set("Content-Type", "application/json")
-  data, _ := json.Marshal(Tenants{tenants})
+  data, _ := json.Marshal(Dogs{dogs})
   w.Write(data)
 }
 
 func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+  // get dog based on supplied ID
+  vars := mux.Vars(req)
+  dogId, _ := strconv.Atoi(vars["id"])
+  dog, err := db.GetDog(ctx.DBConnection, dogId)
+  if err == sql.ErrNoRows {
+    w.WriteHeader(http.StatusNotFound)
+    return
+  } else if err != nil {
+    log.Printf("ERROR: DogHandler: GetDog error - %v", err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+
+  // get family information
+  familyAsChild, familiesAsParent, err := db.GetFamilies(
+    ctx.DBConnection,
+    dogId,
+  )
+  if err != nil {
+    log.Printf("ERROR: DogHandler: GetFamilies error - %v", err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+
+  w.Header().Set("Content-Type", "application/json")
+  data, _ := json.Marshal(DogReport{
+    Dog: dog,
+    FamilyAsChild: familyAsChild,
+    FamiliesAsParent: familiesAsParent,
+  })
+  w.Write(data)
+}
+
+func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   // validate query params
   params, err := ParseAndUnescape(req.URL.RawQuery)
   if err != nil {
@@ -84,15 +115,51 @@ func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   }
   err = ExpectKeys(
     params,
-    []string{"id"},
+    []string{"sireid", "damid"},
   )
   if err != nil {
     w.WriteHeader(http.StatusBadRequest)
     return
   }
+  sireId, err := strconv.Atoi(params["sireid"][0])
+  if err != nil {
+    w.WriteHeader(http.StatusBadRequest)
+    return
+  }
+  damId, err := strconv.Atoi(params["damid"][0])
+  if err != nil {
+    w.WriteHeader(http.StatusBadRequest)
+    return
+  }
 
+  // fetch parents
+  sire, err := db.GetDog(ctx.DBConnection, sireId)
+  if err != nil {
+    log.Printf("ERROR: FamilyHandler: GetDog error - %v", err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+  dam, err := db.GetDog(ctx.DBConnection, damId)
+  if err != nil {
+    log.Printf("ERROR: FamilyHandler: GetDog error - %v", err)
+    w.WriteHeader(http.StatusInternalServerError)
+    return
+  }
+
+  // fetch children
+  children, err := db.GetChildren(
+    ctx.DBConnection,
+    sireId,
+    damId,
+  )
+
+  // all done
   w.Header().Set("Content-Type", "application/json")
-  data, _ := json.Marshal(RowCounts{counts})
+  data, _ := json.Marshal(CouplesReport{
+    Sire: sire,
+    Dam: dam,
+    Children: children,
+  })
   w.Write(data)
 }
 

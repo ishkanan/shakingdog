@@ -60,11 +60,6 @@ func (c *Config) Valid() bool {
 		return false
 	}
 
-	// API needs a RedOctober server in order to decrypt recording encryption keys
-	if len(c.Server.ROServer) == 0 {
-		return false
-	}
-
 	return true
 }
 

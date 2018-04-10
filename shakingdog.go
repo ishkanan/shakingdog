@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -42,7 +41,7 @@ func main() {
   // parse CLI arguments
 	flag.Parse()
   if flag.NFlag() < 1 {
-    fmt.Println("== Shaking Dog Register ==\n")
+    fmt.Println("== Shaking Dog / CECS Register ==\n")
     flag.PrintDefaults()
     return
   }
@@ -124,20 +123,26 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 			http.FileServer(http.Dir(cfg.Server.StaticPath))),
 	)
 
-	// multiple dogs fetch
-	router.HandleFunc(
+	// all dogs fetch
+	router.Handle(
 		fmt.Sprintf("%s/api/dogs", cfg.Server.BaseURL),
 		HandlerWithContext(webserver.DogsHandler),
 	)
 
 	// single dog fetch
-	router.HandleFunc(
+	router.Handle(
 		fmt.Sprintf("%s/api/dog/{id:[0-9]+}", cfg.Server.BaseURL),
 		HandlerWithContext(webserver.DogHandler),
 	)
 
+	// family fetch
+	router.Handle(
+		fmt.Sprintf("%s/api/family", cfg.Server.BaseURL),
+		HandlerWithContext(webserver.FamilyHandler),
+	)
+
 	// shaking dog admin
-/*	router.Handle(
+  /*	router.Handle(
 		fmt.Sprintf("%s/api/admin/shakingdog", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
 			HandlerWithContext(webserver.ShakingDogHandler),
@@ -145,7 +150,7 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	))*/
 
 	// cecs admin
-/*	router.Handle(
+  /*	router.Handle(
 		fmt.Sprintf("%s/api/admin/cecs", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
 			HandlerWithContext(webserver.CecsHandler),
