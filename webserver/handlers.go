@@ -144,13 +144,6 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
     return
   }
 
-  // no children means the sire/dam combo is not a thing because
-  // every couple has at least one child if they are in the DB
-  if len(children) == 0 {
-    w.WriteHeader(http.StatusNotFound)
-    return
-  }
-
   // fetch parents
   sire, err := db.GetDog(ctx.DBConnection, sireId)
   if err != nil {

@@ -96,7 +96,8 @@ func GetSires(dbConn *sql.DB, damId int) ([]Dog, error) {
       ON d.shakingdogstatusid = s1.id
     JOIN ailmentstatus s2
       ON d.cecsstatusid = s2.id
-    WHERE r.damid = ?`,
+    WHERE r.damid = ?
+    GROUP BY d.id, d.name, d.gender, s1.status, s2.status`,
     damId,
   )
   if err != nil {
@@ -123,7 +124,8 @@ func GetDams(dbConn *sql.DB, sireId int) ([]Dog, error) {
       ON d.shakingdogstatusid = s1.id
     JOIN ailmentstatus s2
       ON d.cecsstatusid = s2.id
-    WHERE r.sireid = ?`,
+    WHERE r.sireid = ?
+    GROUP BY d.id, d.name, d.gender, s1.status, s2.status`,
     sireId,
   )
   if err != nil {
