@@ -117,10 +117,11 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	router := mux.NewRouter()
 
 	// "root" serves up static UI files
-	router.PathPrefix("/app").Handler(
-		http.StripPrefix(
-			fmt.Sprintf("%s/app", cfg.Server.BaseURL),
-			http.FileServer(http.Dir(cfg.Server.StaticPath))),
+	router.PathPrefix(
+        fmt.Sprintf("%s/app", cfg.Server.BaseURL)).Handler(
+    		http.StripPrefix(
+	    		fmt.Sprintf("%s/app", cfg.Server.BaseURL),
+		    	http.FileServer(http.Dir(cfg.Server.StaticPath))),
 	)
 
 	// all dogs fetch
