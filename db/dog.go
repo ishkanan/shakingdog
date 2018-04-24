@@ -22,10 +22,13 @@ type Family struct {
 type Relationship struct {
   SireId int `json:"sireid"`
   SireName string `json:"sirename"`
+  SireShakingDogStatus string `json:sireshakingdogstatus"`
   DamId int `json:"damid"`
   DamName string `json:"damname"`
+  DamShakingDogStatus string `json:damshakingdogstatus"`
   ChildId int `json:"childid"`
   ChildName string `json:"childname"`
+  ChildShakingDogStatus string `json:childshakingdogstatus"`
 }
 
 
@@ -97,14 +100,24 @@ func GetDog(dbConn *sql.DB, id int) (dog Dog, err error) {
 func GetRelationships(dbConn *sql.DB) ([]Relationship, error) {
   // fetches all relationships
   rows, err := dbConn.Query(`
-    SELECT sire.id, sire.name, dam.id, dam.name, child.id, child.name
+    SELECT
+      sire.id, sire.name, sirestatus.status,
+      dam.id, dam.name, damstatus.status,
+      child.id, child.name, childstatus.status
     FROM relationship r
     JOIN dog sire
       ON sire.id = r.sireid
     JOIN dog dam
       ON dam.id = r.damid
     JOIN dog child
-      ON child.id = r.childid`,
+      ON child.id = r.childid
+    JOIN ailmentstatus sirestatus
+      ON sirestatus.id = sire.shakingdogstatusid
+    JOIN ailmentstatus damstatus
+      ON damstatus.id = dam.shakingdogstatusid
+    JOIN ailmentstatus childstatus
+      ON childstatus.id = child.shakingdogstatusid
+  `,
   )
   if err != nil {
     return nil, err
@@ -118,10 +131,13 @@ func GetRelationships(dbConn *sql.DB) ([]Relationship, error) {
     err := rows.Scan(
       &r.SireId,
       &r.SireName,
+      &r.SireShakingDogStatus,
       &r.DamId,
       &r.DamName,
+      &r.DamShakingDogStatus,
       &r.ChildId,
       &r.ChildName,
+      &r.ChildShakingDogStatus,
     )
     if err != nil {
       return nil, err
