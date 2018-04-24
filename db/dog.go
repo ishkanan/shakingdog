@@ -22,13 +22,13 @@ type Family struct {
 type Relationship struct {
   SireId int `json:"sireid"`
   SireName string `json:"sirename"`
-  SireShakingDogStatus string `json:sireshakingdogstatus"`
+  SireShakingDogStatus string `json:"sireshakingdogstatus"`
   DamId int `json:"damid"`
   DamName string `json:"damname"`
-  DamShakingDogStatus string `json:damshakingdogstatus"`
+  DamShakingDogStatus string `json:"damshakingdogstatus"`
   ChildId int `json:"childid"`
   ChildName string `json:"childname"`
-  ChildShakingDogStatus string `json:childshakingdogstatus"`
+  ChildShakingDogStatus string `json:"childshakingdogstatus"`
 }
 
 
