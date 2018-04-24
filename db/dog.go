@@ -19,6 +19,15 @@ type Family struct {
   Children []Dog `json:"children"`
 }
 
+type Relationship struct {
+  SireId int `json:"sireid"`
+  SireName string `json:"sirename"`
+  DamId int `json:"damid"`
+  DamName string `json:"damname"`
+  ChildId int `json:"childid"`
+  ChildName string `json:"childname"`
+}
+
 
 func _DogsFromRows(rows *sql.Rows) ([]Dog, error) {
   // utility function that constructs a list of Dog
@@ -83,6 +92,43 @@ func GetDog(dbConn *sql.DB, id int) (dog Dog, err error) {
     &dog.CecsStatus,
   )
   return
+}
+
+func GetRelationships(dbConn *sql.DB) ([]Relationship, error) {
+  // fetches all relationships
+  rows, err := dbConn.Query(`
+    SELECT sire.id, sire.name, dam.id, dam.name, child.id, child.name
+    FROM relationship r
+    JOIN dog sire
+      ON sire.id = r.sireid
+    JOIN dog dam
+      ON dam.id = r.damid
+    JOIN dog child
+      ON child.id = r.childid`,
+  )
+  if err != nil {
+    return nil, err
+  }
+  defer rows.Close()
+
+  // parse result(s)
+  rships := []Relationship{}
+  for rows.Next() {
+    var r Relationship
+    err := rows.Scan(
+      &r.SireId,
+      &r.SireName,
+      &r.DamId,
+      &r.DamName,
+      &r.ChildId,
+      &r.ChildName,
+    )
+    if err != nil {
+      return nil, err
+    }
+    rships = append(rships, r)
+  }
+  return rships, nil
 }
 
 func GetSires(dbConn *sql.DB, damId int) ([]Dog, error) {

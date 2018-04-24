@@ -142,6 +142,12 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 		HandlerWithContext(webserver.FamilyHandler),
 	)
 
+	// relationships fetch
+	router.Handle(
+		fmt.Sprintf("%s/api/relationships", cfg.Server.BaseURL),
+		HandlerWithContext(webserver.RelationshipsHandler),
+	)
+
 	// shaking dog admin
   /*	router.Handle(
 		fmt.Sprintf("%s/api/admin/shakingdog", cfg.Server.BaseURL),
