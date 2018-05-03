@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/Rusty1958/shakingdog/auth"
 	"bitbucket.org/Rusty1958/shakingdog/config"
 	"bitbucket.org/Rusty1958/shakingdog/db"
+	"bitbucket.org/Rusty1958/shakingdog/handlers"
 	"bitbucket.org/Rusty1958/shakingdog/webserver"
 
 	"github.com/gorilla/mux"
@@ -22,14 +23,14 @@ var (
 	confFile string
 	// this doubles as global store for the things we
 	// need to pass to the request handlers
-	handlerContext *webserver.HandlerContext
+	handlerContext *handlers.HandlerContext
 )
 
 
 func init() {
 	flag.StringVar(&confFile, "f", "", "Path to the configuration file.")
 
-	handlerContext = &webserver.HandlerContext{}
+	handlerContext = &handlers.HandlerContext{}
 }
 
 func main() {
@@ -41,7 +42,7 @@ func main() {
   // parse CLI arguments
 	flag.Parse()
   if flag.NFlag() < 1 {
-    fmt.Println("== Shaking Dog / CECS Register ==\n")
+    fmt.Println("== SLEM / CECS Register ==\n")
     flag.PrintDefaults()
     return
   }
@@ -127,42 +128,34 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	// all dogs fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/dogs", cfg.Server.BaseURL),
-		HandlerWithContext(webserver.DogsHandler),
+		HandlerWithContext(handlers.DogsHandler),
 	)
 
 	// single dog fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/dog/{id:[0-9]+}", cfg.Server.BaseURL),
-		HandlerWithContext(webserver.DogHandler),
+		HandlerWithContext(handlers.DogHandler),
 	)
 
 	// family fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/family", cfg.Server.BaseURL),
-		HandlerWithContext(webserver.FamilyHandler),
+		HandlerWithContext(handlers.FamilyHandler),
 	)
 
 	// relationships fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/relationships", cfg.Server.BaseURL),
-		HandlerWithContext(webserver.RelationshipsHandler),
+		HandlerWithContext(handlers.RelationshipsHandler),
 	)
 
-	// shaking dog admin
-  /*	router.Handle(
-		fmt.Sprintf("%s/api/admin/shakingdog", cfg.Server.BaseURL),
+	// admin - new dog
+	router.Handle(
+		fmt.Sprintf("%s/api/admin/dog", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(webserver.ShakingDogHandler),
-			HandlerWithContext(webserver.NeedAuthHandler),
-	))*/
-
-	// cecs admin
-  /*	router.Handle(
-		fmt.Sprintf("%s/api/admin/cecs", cfg.Server.BaseURL),
-		oktaAuth.SecuredHandler(
-			HandlerWithContext(webserver.CecsHandler),
-			HandlerWithContext(webserver.NeedAuthHandler),
-	))*/
+			HandlerWithContext(handlers.NewDogHandler),
+			HandlerWithContext(handlers.NeedAuthHandler),
+	))
 
 	// sets the state cookie and bounces user to the Okta login page
 	router.Handle(
@@ -187,7 +180,7 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	return router
 }
 
-func HandlerWithContext(handler func(http.ResponseWriter, *http.Request, *webserver.HandlerContext)) (http.Handler) {
+func HandlerWithContext(handler func(http.ResponseWriter, *http.Request, *handlers.HandlerContext)) (http.Handler) {
 	return http.HandlerFunc(func(w http.ResponseWriter, q *http.Request) {
 		// hand our context to the handler function
 		handler(w, q, handlerContext)

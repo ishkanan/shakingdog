@@ -1,8 +1,10 @@
-package webserver
+package handlers
 
 import (
+  "encoding/json"
   "errors"
   "fmt"
+  "net/http"
   "net/url"
 )
 
@@ -31,4 +33,24 @@ func ParseAndUnescape(query string) (map[string][]string, error) {
   }
 
   return parsed, nil
+}
+
+func SendErrorResponse(w http.ResponseWriter, code int, message string) {
+  // writes a JSON error response
+  w.Header().Set("Content-Type", "application/json")
+  data, _ := json.Marshal(ErrorResponse{
+    Error: &ErrorMessage{
+      Code: code,
+      Message: message,
+  }})
+  w.Write(data)
+}
+
+func SendSuccessResponse(w http.ResponseWriter, data []byte) {
+  // writes a JSON success response
+  w.Header().Set("Content-Type", "application/json")
+  if data == nil {
+    data, _ = json.Marshal(&GenericConfirm{Result: "OK"})
+  }
+  w.Write(data)
 }

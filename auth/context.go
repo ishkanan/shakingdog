@@ -2,7 +2,8 @@ package auth
 
 import (
 	"context"
-
+	"strings"
+	
 	"golang.org/x/oauth2"
 )
 
@@ -67,8 +68,12 @@ func WithGroups(ctx context.Context, val []string) context.Context {
 // GroupsFromContext extracts Okta Groups from the context if it's present
 // Returns nil if it's not present.
 func GroupsFromContext(ctx context.Context) []string {
-	if val, ok := ctx.Value(groupsKey).([]string); ok {
-		return val
+	if groups, ok := ctx.Value(groupsKey).([]string); ok {
+		// convert to lower case for easier comparison
+		for index, group := range groups {
+			groups[index] = strings.ToLower(group)
+		}
+		return groups
 	}
 	return nil
 }
