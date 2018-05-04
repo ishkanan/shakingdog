@@ -28,11 +28,24 @@ func TranslateError(err error) error {
   return err
 }
 
-func Transact(dbConn *sql.DB, txFunc func(*sql.Tx) error) (err error) {
+func RollbackIfPanic(tx *sql.Tx) {
+  p := recover()
+  if p != nil {
+    tx.Rollback()
+    panic(p) // re-throw panic after Rollback
+  }
+}
+
+func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sql.Tx) error) (tx *sql.Tx, err error) {
   // https://stackoverflow.com/questions/16184238/database-sql-tx-detecting-commit-or-rollback
-  tx, err := dbConn.Begin()
-  if err != nil {
-    return
+  // slightly modified to accept external transactions and allow for deterred
+  // commits
+  tx = externTx
+  if externTx == nil {
+    tx, err := dbConn.Begin()
+    if err != nil {
+      return tx, err
+    }
   }
   defer func() {
     p := recover()
@@ -41,23 +54,40 @@ func Transact(dbConn *sql.DB, txFunc func(*sql.Tx) error) (err error) {
       panic(p) // re-throw panic after Rollback
     } else if err != nil {
       tx.Rollback()
-    } else {
+    } else if autoCommit {
       err = tx.Commit()
     }
   }()
   err = txFunc(tx)
-  return err
+  return
 }
 
-func SaveNewDog(dbConn *sql.DB, dog *data.Dog) (error) {
+func SaveNewDog(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dog *data.Dog) (*sql.Tx, error) {
   // saves a new dog
-  return Transact(dbConn, func (tx *sql.Tx) error {
+  return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
     _, err := tx.Exec(
       "CALL SaveNewDog(?, ?, ?, ?)",
       dog.Name,
       dog.Gender,
       dog.ShakingDogStatus,
       dog.CecsStatus,
+    )
+    if err != nil {
+      return TranslateError(err)
+    }
+    return nil
+  })
+}
+
+func SaveNewRelationship(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, sireId, damId, childId int) (*sql.Tx, error) {
+  // saves a new relationship
+  return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
+    _, err := tx.Exec(`
+      INSERT INTO relationship (sireid, damid, childid)
+      VALUES (?, ?, ?)`,
+      sireId,
+      damId,
+      childId,
     )
     if err != nil {
       return TranslateError(err)

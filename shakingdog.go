@@ -157,6 +157,14 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 			HandlerWithContext(handlers.NeedAuthHandler),
 	))
 
+	// admin - new litter
+	router.Handle(
+		fmt.Sprintf("%s/api/admin/litter", cfg.Server.BaseURL),
+		oktaAuth.SecuredHandler(
+			HandlerWithContext(handlers.NewLitterHandler),
+			HandlerWithContext(handlers.NeedAuthHandler),
+	))
+
 	// sets the state cookie and bounces user to the Okta login page
 	router.Handle(
 		fmt.Sprintf("%s%s", cfg.Server.BaseURL, cfg.Okta.LoginPath),

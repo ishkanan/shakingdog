@@ -43,8 +43,16 @@ type HandlerContext struct {
   Okta *auth.Okta
 }
 
-type NewDog struct {
-  Id int64 `json:"id"`
+type NewLitterDog struct {
+  Mode string `json:"mode"`
+  Selected int `json:"selected"`
+  Dog data.Dog `json:"dog"`
+}
+
+type NewLitter struct {
+  Sire NewLitterDog `json:"sire"`
+  Dam NewLitterDog `json:"dam"`
+  Children []NewLitterDog `json:"children"`
 }
 
 type Redirect struct {

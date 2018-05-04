@@ -72,6 +72,27 @@ func GetDog(dbConn *sql.DB, id int) (dog data.Dog, err error) {
   return
 }
 
+func GetDogByName(dbConn *sql.DB, name string) (dog data.Dog, err error) {
+  // fetches an individual dog
+  err = dbConn.QueryRow(`
+    SELECT d.id, d.name, d.gender, s1.status, s2.status
+    FROM dog d
+    JOIN ailmentstatus s1
+      ON d.shakingdogstatusid = s1.id
+    JOIN ailmentstatus s2
+      ON d.cecsstatusid = s2.id
+    WHERE d.name = ?`,
+    name,
+  ).Scan(
+    &dog.Id,
+    &dog.Name,
+    &dog.Gender,
+    &dog.ShakingDogStatus,
+    &dog.CecsStatus,
+  )
+  return
+}
+
 func GetRelationships(dbConn *sql.DB) ([]data.Relationship, error) {
   // fetches all relationships
   rows, err := dbConn.Query(`
