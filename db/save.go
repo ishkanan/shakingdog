@@ -28,25 +28,28 @@ func TranslateError(err error) error {
   return err
 }
 
-func RollbackIfPanic(tx *sql.Tx) {
+func PanicSafeRollback(tx *sql.Tx) {
   p := recover()
+  tx.Rollback()
   if p != nil {
-    tx.Rollback()
     panic(p) // re-throw panic after Rollback
   }
 }
 
-func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sql.Tx) error) (tx *sql.Tx, err error) {
+func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sql.Tx) error) (*sql.Tx, error) {
   // https://stackoverflow.com/questions/16184238/database-sql-tx-detecting-commit-or-rollback
   // slightly modified to accept external transactions and allow for deterred
   // commits
-  tx = externTx
+  var err error
+  
+  tx := externTx
   if externTx == nil {
-    tx, err := dbConn.Begin()
+    tx, err = dbConn.Begin()
     if err != nil {
       return tx, err
     }
   }
+
   defer func() {
     p := recover()
     if p != nil {
@@ -58,20 +61,23 @@ func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sq
       err = tx.Commit()
     }
   }()
+
   err = txFunc(tx)
-  return
+  return tx, err
 }
 
 func SaveNewDog(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dog *data.Dog) (*sql.Tx, error) {
   // saves a new dog
   return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
-    _, err := tx.Exec(
+    var id int
+    err := tx.QueryRow(
       "CALL SaveNewDog(?, ?, ?, ?)",
       dog.Name,
       dog.Gender,
       dog.ShakingDogStatus,
       dog.CecsStatus,
-    )
+    ).Scan(&id)
+    dog.Id = id
     if err != nil {
       return TranslateError(err)
     }

@@ -21,6 +21,7 @@ SET cecsstatusid = (SELECT id FROM ailmentstatus WHERE status = cecsstatus);
 INSERT INTO dog (`name`, `gender`, `shakingdogstatusid`, `cecsstatusid`)
 VALUES (name, gender, shakingdogstatusid, cecsstatusid);
 
+SELECT LAST_INSERT_ID();
 END$$
 DELIMITER ;
 GRANT EXECUTE ON PROCEDURE shakingdog.SaveNewDog TO 'shakingdog_webuser'@'%';

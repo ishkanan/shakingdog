@@ -41,7 +41,7 @@ func NewDogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
   }
 
   // save the new dog
-  err = db.SaveNewDog(ctx.DBConnection, &newDog)
+  _, err = db.SaveNewDog(ctx.DBConnection, nil, true, &newDog)
   if err == db.ErrUniqueViolation {
     SendErrorResponse(w, ErrDogExists, newDog.Name)
     return
