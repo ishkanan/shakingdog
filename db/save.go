@@ -3,6 +3,7 @@ package db
 import (
   "database/sql"
   "errors"
+  "log"
 
   "bitbucket.org/Rusty1958/shakingdog/data"
 
@@ -30,6 +31,7 @@ func TranslateError(err error) error {
 
 func PanicSafeRollback(tx *sql.Tx) {
   p := recover()
+  log.Printf("INFO: PanicSafeRollback - Attempting rolling back.")
   tx.Rollback()
   if p != nil {
     panic(p) // re-throw panic after Rollback
@@ -38,8 +40,7 @@ func PanicSafeRollback(tx *sql.Tx) {
 
 func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sql.Tx) error) (*sql.Tx, error) {
   // https://stackoverflow.com/questions/16184238/database-sql-tx-detecting-commit-or-rollback
-  // slightly modified to accept external transactions and allow for deterred
-  // commits
+  // slightly modified to accept external transactions and allow for deferred commits
   var err error
   
   tx := externTx
@@ -49,15 +50,16 @@ func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sq
       return tx, err
     }
   }
-
   defer func() {
     p := recover()
     if p != nil {
       tx.Rollback()
       panic(p) // re-throw panic after Rollback
     } else if err != nil {
+      log.Printf("Transact: Rolling back.")
       tx.Rollback()
     } else if autoCommit {
+      log.Printf("Transact: Auto committing.")
       err = tx.Commit()
     }
   }()
@@ -69,15 +71,13 @@ func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sq
 func SaveNewDog(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dog *data.Dog) (*sql.Tx, error) {
   // saves a new dog
   return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
-    var id int
     err := tx.QueryRow(
       "CALL SaveNewDog(?, ?, ?, ?)",
       dog.Name,
       dog.Gender,
       dog.ShakingDogStatus,
       dog.CecsStatus,
-    ).Scan(&id)
-    dog.Id = id
+    ).Scan(&dog.Id)
     if err != nil {
       return TranslateError(err)
     }

@@ -41,25 +41,26 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   var tx *sql.Tx
 
   // FIRST, create any new dogs
-  entries := []data.Dog{newLitter.Sire, newLitter.Dam}
-  entries = append(entries, newLitter.Children...)
+  entries := []*data.Dog{&newLitter.Sire, &newLitter.Dam}
+  for i, _ := range newLitter.Children {
+    entries = append(entries, &newLitter.Children[i])
+  }
   deferred := false
   for _, dog := range entries {
     if dog.Id == 0 {
       // is dog request valid?
-      if !data.IsValidDog(&dog) {
+      if !data.IsValidDog(dog) {
         w.WriteHeader(http.StatusBadRequest)
         return
       }
 
       // seems valid, so create dog
-      tx, err := db.SaveNewDog(ctx.DBConnection, tx, false, &dog)
-      log.Printf("childId=%v", child.Id)
+      tx, err = db.SaveNewDog(ctx.DBConnection, tx, false, dog)
       if err == db.ErrUniqueViolation {
         SendErrorResponse(w, ErrDogExists, dog.Name)
         return
       } else if err != nil {
-        log.Printf("ERROR: NewLitterHandler: SaveNewLitter error - %v", err)
+        log.Printf("ERROR: NewLitterHandler: SaveNewDog error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")
         return
       }
@@ -75,13 +76,11 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   // THEN, create relationships
   sireId := entries[0].Id
   damId := entries[1].Id
-  log.Printf("sireId=%v, damId=%v", sireId, damId)
   for _, child := range entries[2:] {
-    log.Printf("childId=%v", child.Id)
+    log.Printf("child=%v", child)
     tx, err = db.SaveNewRelationship(ctx.DBConnection, tx, false, sireId, damId, child.Id)
-    // note: continue if relationship already exists, no biggie
-    if err != nil && err != db.ErrUniqueViolation {
-      log.Printf("ERROR: NewLitterHandler: SaveNewLitter error - %v", err)
+    if err != nil {
+      log.Printf("ERROR: NewLitterHandler: SaveNewRelationship error - %v", err)
       SendErrorResponse(w, ErrServerError, "Database error")
       return
     }
