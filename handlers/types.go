@@ -56,3 +56,29 @@ type Redirect struct {
 type Relationships struct {
   Relationships []data.Relationship `json:"relationships"`
 }
+
+type TestResult struct {
+  Dog TestResultDog `json:"dog"`
+  Sire data.Dog `json:"sire"`
+  Dam data.Dog `json:"dam"`
+}
+
+type TestResultDog struct {
+  Id int `json:"id"`
+  Name string `json:"name"`
+  Gender string `json:"gender"`
+  ShakingDogStatus string `json:"shakingdogstatus"`
+  CecsStatus string `json:"cecsstatus"`
+  OrigShakingDogStatus bool `json:"origshakingdogstatus,omitempty"`
+  OrigCecsDogStatus bool `json:"origcecsdogstatus,omitempty"`
+}
+
+func (trd *TestResultDog) AsDataDog() (*data.Dog) {
+  return &data.Dog{
+    Id: trd.Id,
+    Name: trd.Name,
+    Gender: trd.Gender,
+    ShakingDogStatus: trd.ShakingDogStatus,
+    CecsStatus: trd.CecsStatus,
+  }
+}

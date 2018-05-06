@@ -165,6 +165,14 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 			HandlerWithContext(handlers.NeedAuthHandler),
 	))
 
+	// admin - test result
+	router.Handle(
+		fmt.Sprintf("%s/api/admin/testresult", cfg.Server.BaseURL),
+		oktaAuth.SecuredHandler(
+			HandlerWithContext(handlers.TestResultHandler),
+			HandlerWithContext(handlers.NeedAuthHandler),
+	))
+
 	// sets the state cookie and bounces user to the Okta login page
 	router.Handle(
 		fmt.Sprintf("%s%s", cfg.Server.BaseURL, cfg.Okta.LoginPath),

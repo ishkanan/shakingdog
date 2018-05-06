@@ -12,7 +12,7 @@ import (
 )
 
 
-func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   // Okta JWT provides group membership info
   oktaContext := req.Context()
   username := auth.UsernameFromContext(oktaContext)
@@ -21,7 +21,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   // verify the user is a SLEM admin
   if !auth.IsSlemAdmin(groups) {
     log.Printf(
-      "INFO: NewLitterHandler: '%s' tried to save a new litter but does not have permission.",
+      "INFO: TestResultHandler: '%s' tried to save a new litter but does not have permission.",
       username,
     )
     w.WriteHeader(http.StatusForbidden)
@@ -30,8 +30,8 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
 
   // parse POST body
   decoder := json.NewDecoder(req.Body)
-  var newLitter NewLitter
-  err := decoder.Decode(&newLitter)
+  var testResult TestResult
+  err := decoder.Decode(&testResult)
   if err != nil {
     w.WriteHeader(http.StatusBadRequest)
     return
@@ -42,10 +42,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   deferred := false
 
   // FIRST, create any new dogs
-  entries := []*data.Dog{&newLitter.Sire, &newLitter.Dam}
-  for i, _ := range newLitter.Children {
-    entries = append(entries, &newLitter.Children[i])
-  }
+  entries := []*data.Dog{&testResult.Sire, &testResult.Dam, testResult.Dog.AsDataDog()}
   for _, dog := range entries {
     if dog.Id == 0 {
       // is dog request valid?
@@ -60,7 +57,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
         SendErrorResponse(w, ErrDogExists, dog.Name)
         return
       } else if err != nil {
-        log.Printf("ERROR: NewLitterHandler: SaveNewDog error - %v", err)
+        log.Printf("ERROR: TestResultHandler: SaveNewDog error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")
         return
       }
@@ -72,29 +69,28 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
       }
     }
   }
-  
-  // THEN, create relationships
-  sireId := entries[0].Id
-  damId := entries[1].Id
-  for _, child := range entries[2:] {
-    tx, err = db.SaveNewRelationship(ctx.DBConnection, tx, false, sireId, damId, child.Id)
-    if err != nil {
-      log.Printf("ERROR: NewLitterHandler: SaveNewRelationship error - %v", err)
-      SendErrorResponse(w, ErrServerError, "Database error")
-      return
-    }
 
-    // must defer if we haven't yet
-    if !deferred {
-      defer db.PanicSafeRollback(tx)
-      deferred = true
-    }
+  // THEN, update statuses
+  tx, err = db.UpdateStatuses(ctx.DBConnection, tx, false, entries[2])
+  if err != nil {
+    log.Printf("ERROR: TestResultHandler: UpdateStatuses error - %v", err)
+    SendErrorResponse(w, ErrServerError, "Database error")
+    return
   }
+  // must defer if we haven't yet
+  if !deferred {
+    defer db.PanicSafeRollback(tx)
+    deferred = true
+  }
+
+  // THEN, update relationship
+  //INSERT relationship (sireid, damid, dog.id)*/
+  // THEN, set infer=true if origstatus in []
 
   // try commit
   err = tx.Commit()
   if err != nil {
-    log.Printf("ERROR: NewLitterHandler: Transaction commit error - %v", err)
+    log.Printf("ERROR: TestResultHandler: Transaction commit error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }

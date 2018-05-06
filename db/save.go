@@ -56,10 +56,10 @@ func Transact(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, txFunc func(*sq
       tx.Rollback()
       panic(p) // re-throw panic after Rollback
     } else if err != nil {
-      log.Printf("Transact: Rolling back.")
+      log.Printf("INFO: Transact - Rolling back.")
       tx.Rollback()
     } else if autoCommit {
-      log.Printf("Transact: Auto committing.")
+      log.Printf("INFO: Transact - Auto committing.")
       err = tx.Commit()
     }
   }()
@@ -94,6 +94,22 @@ func SaveNewRelationship(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, sire
       sireId,
       damId,
       childId,
+    )
+    if err != nil {
+      return TranslateError(err)
+    }
+    return nil
+  })
+}
+
+func UpdateStatuses(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dog *data.Dog) (*sql.Tx, error) {
+  // saves a new dog
+  return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
+    err := tx.Exec(
+      "CALL UpdateStatuses(?, ?, ?)",
+      dog.Id,
+      dog.ShakingDogStatus,
+      dog.CecsStatus,
     )
     if err != nil {
       return TranslateError(err)
