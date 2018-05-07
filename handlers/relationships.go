@@ -18,7 +18,7 @@ func RelationshipsHandler(w http.ResponseWriter, req *http.Request, ctx *Handler
     rships = []data.Relationship{}
   } else if err != nil {
     log.Printf("ERROR: RelationshipsHandler: GetRelationships error - %v", err)
-    w.WriteHeader(http.StatusInternalServerError)
+    SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
 

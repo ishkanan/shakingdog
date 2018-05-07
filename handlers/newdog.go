@@ -23,7 +23,7 @@ func NewDogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
       "INFO: NewDogHandler: '%s' tried to save a new dog but does not have permission.",
       username,
     )
-    w.WriteHeader(http.StatusForbidden)
+    SendErrorResponse(w, ErrForbidden, "Not an admin")
     return
   }
 
@@ -32,11 +32,11 @@ func NewDogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
   var newDog data.Dog
   err := decoder.Decode(&newDog)
   if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
   if !data.IsValidDog(&newDog) {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
 

@@ -15,7 +15,7 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
   // validate query params
   params, err := ParseAndUnescape(req.URL.RawQuery)
   if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
   err = ExpectKeys(
@@ -23,17 +23,17 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
     []string{"sireid", "damid"},
   )
   if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
   sireId, err := strconv.Atoi(params["sireid"][0])
   if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
   damId, err := strconv.Atoi(params["damid"][0])
   if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
 
@@ -45,7 +45,7 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
   )
   if err != nil {
     log.Printf("ERROR: FamilyHandler: GetChildren error - %v", err)
-    w.WriteHeader(http.StatusInternalServerError)
+    SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
 
@@ -53,13 +53,13 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
   sire, err := db.GetDog(ctx.DBConnection, sireId)
   if err != nil {
     log.Printf("ERROR: FamilyHandler: GetDog error - %v", err)
-    w.WriteHeader(http.StatusInternalServerError)
+    SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
   dam, err := db.GetDog(ctx.DBConnection, damId)
   if err != nil {
     log.Printf("ERROR: FamilyHandler: GetDog error - %v", err)
-    w.WriteHeader(http.StatusInternalServerError)
+    SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
 

@@ -20,11 +20,11 @@ func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   dogId, _ := strconv.Atoi(vars["id"])
   dog, err := db.GetDog(ctx.DBConnection, dogId)
   if err == sql.ErrNoRows {
-    w.WriteHeader(http.StatusNotFound)
+    SendErrorResponse(w, ErrNotFound, strconv.Itoa(dog.Id))
     return
   } else if err != nil {
     log.Printf("ERROR: DogHandler: GetDog error - %v", err)
-    w.WriteHeader(http.StatusInternalServerError)
+    SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
 
@@ -35,7 +35,7 @@ func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   )
   if err != nil {
     log.Printf("ERROR: DogHandler: GetFamilies error - %v", err)
-    w.WriteHeader(http.StatusInternalServerError)
+    SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
 

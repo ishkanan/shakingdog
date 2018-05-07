@@ -18,7 +18,7 @@ func DogsHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) 
     dogs = []data.Dog{}
   } else if err != nil {
     log.Printf("ERROR: DogsHandler: GetDogs error - %v", err)
-    w.WriteHeader(http.StatusInternalServerError)
+    SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
 

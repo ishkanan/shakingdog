@@ -148,6 +148,14 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 		fmt.Sprintf("%s/api/relationships", cfg.Server.BaseURL),
 		HandlerWithContext(handlers.RelationshipsHandler),
 	)
+	
+	// handy Okta check
+	router.Handle(
+		fmt.Sprintf("%s/auth", cfg.Server.BaseURL),
+		oktaAuth.SecuredHandler(
+			HandlerWithContext(handlers.AuthCheckHandler),
+			HandlerWithContext(handlers.NeedAuthHandler),
+	))
 
 	// admin - new dog
 	router.Handle(

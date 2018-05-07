@@ -24,7 +24,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
       "INFO: NewLitterHandler: '%s' tried to save a new litter but does not have permission.",
       username,
     )
-    w.WriteHeader(http.StatusForbidden)
+    SendErrorResponse(w, ErrForbidden, "Not an admin")
     return
   }
 
@@ -33,7 +33,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   var newLitter data.NewLitter
   err := decoder.Decode(&newLitter)
   if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
 
@@ -50,7 +50,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
     if dog.Id == 0 {
       // is dog request valid?
       if !data.IsValidDog(dog) {
-        w.WriteHeader(http.StatusBadRequest)
+        SendErrorResponse(w, ErrBadRequest, "Invalid body")
         return
       }
 

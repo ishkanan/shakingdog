@@ -24,7 +24,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
       "INFO: TestResultHandler: '%s' tried to save a new test result but does not have permission.",
       username,
     )
-    w.WriteHeader(http.StatusForbidden)
+    SendErrorResponse(w, ErrForbidden, "Not an admin")
     return
   }
 
@@ -32,7 +32,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
   var testResult data.TestResult
   err := json.NewDecoder(req.Body).Decode(&testResult)
   if err != nil {
-    w.WriteHeader(http.StatusBadRequest)
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
 
@@ -46,7 +46,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
     if dog != nil && dog.Id == 0 {
       // is dog request valid?
       if !data.IsValidDog(dog) {
-        w.WriteHeader(http.StatusBadRequest)
+        SendErrorResponse(w, ErrBadRequest, "Invalid body")
         return
       }
 
