@@ -155,6 +155,7 @@ func UpdateStatusesAndFlags(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, d
   // updates dog statuses and override flags
   return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
     // calculate flag values
+    // NOTE: the stored proc won't update the flags once set in the table
     inferredStatuses := []string{"CarrierByProgeny", "ClearByParentage"}
     overrideShakingDogInfer := data.StringInSlice(inferredStatuses, dog.OrigShakingDogStatus) && !data.StringInSlice(inferredStatuses, dog.ShakingDogStatus)
     overrideCecsInfer := false //TBC

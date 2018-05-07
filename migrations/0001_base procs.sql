@@ -27,8 +27,8 @@ CREATE DEFINER=`root`@`%` PROCEDURE `UpdateStatusesAndFlags`(
   IN `dogid` BIGINT,
   IN `shakingdogstatus` VARCHAR(20),
   IN `cecsstatus` VARCHAR(20),
-  IN `shakingdoginferoverride` BIT,
-  IN `cecsinferoverride` BIT
+  IN `newshakingdoginferoverride` BOOLEAN,
+  IN `newcecsinferoverride` BOOLEAN
 )
 LANGUAGE SQL
 NOT DETERMINISTIC
@@ -38,15 +38,21 @@ COMMENT ''
 BEGIN
 DECLARE shakingdogstatusid BIGINT;
 DECLARE cecsstatusid BIGINT;
+DECLARE currentshakingdoginferoverride BOOLEAN;
+DECLARE currentcecsinferoverride BOOLEAN;
 
 SET shakingdogstatusid = (SELECT `id` FROM ailmentstatus WHERE status = shakingdogstatus);
 SET cecsstatusid = (SELECT `id` FROM ailmentstatus WHERE status = cecsstatus);
+SELECT `shakingdoginferoverride`, `cecsinferoverride`
+INTO currentshakingdoginferoverride, currentcecsinferoverride
+FROM dog
+WHERE `id` = dogid;
 
 UPDATE dog
 SET `shakingdogstatusid` = shakingdogstatusid,
     `cecsstatusid` = cecsstatusid,
-    `shakingdoginferoverride` = shakingdoginferoverride,
-    `cecsinferoverride` = cecsinferoverride
+    `shakingdoginferoverride` = (currentshakingdoginferoverride || newshakingdoginferoverride),
+    `cecsinferoverride` = (currentcecsinferoverride || newcecsinferoverride)
 WHERE `id` = dogid;
 
 END$$

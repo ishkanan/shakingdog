@@ -11,8 +11,8 @@ CREATE TABLE dog (
     gender varchar(10) NOT NULL,
     shakingdogstatusid bigint unsigned NOT NULL,
     cecsstatusid bigint unsigned NOT NULL,
-    shakingdoginferoverride bit NOT NULL,
-    cecsinferoverride bit NOT NULL,
+    shakingdoginferoverride boolean NOT NULL,
+    cecsinferoverride boolean NOT NULL,
     CONSTRAINT UNIQUE (name),
     CONSTRAINT `fk_shakingdogstatus` FOREIGN KEY (shakingdogstatusid) REFERENCES ailmentstatus (id),
     CONSTRAINT `fk_cecsstatus` FOREIGN KEY (cecsstatusid) REFERENCES ailmentstatus (id));
