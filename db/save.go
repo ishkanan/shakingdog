@@ -11,8 +11,8 @@ import (
 )
 
 /*
- * NOTE: This MySQL driver does not support named parameters so they
- *       must be invoked with the CALL command instead.
+ * NOTE: This MySQL driver does not support named parameters so SPs are
+ *       invoked with the CALL command and use SELECT to return new IDs
  */
 
 var ErrUniqueViolation = errors.New("db: unique constraint violation")
@@ -31,8 +31,15 @@ func TranslateError(err error) error {
 
 func PanicSafeRollback(tx *sql.Tx) {
   p := recover()
-  log.Printf("INFO: PanicSafeRollback - Attempting rolling back.")
-  tx.Rollback()
+  log.Printf("INFO: PanicSafeRollback - Attempting rollback...")
+  err := tx.Rollback()
+  if err == sql.ErrTxDone {
+    log.Printf("INFO: PanicSafeRollback - Rollback not required.")
+  } else if err == nil {
+    log.Printf("INFO: PanicSafeRollback - Rollback successful.")
+  } else {
+    log.Printf("INFO: PanicSafeRollback - Rollback failed.")
+  }
   if p != nil {
     panic(p) // re-throw panic after Rollback
   }
@@ -85,10 +92,18 @@ func SaveNewDog(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dog *data.Dog
   })
 }
 
-func SaveNewRelationship(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, sireId, damId, childId int) (*sql.Tx, error) {
-  // saves a new relationship
+func SaveRelationship(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, sireId, damId, childId int) (*sql.Tx, error) {
+  // creates (or re-creates) a relationship
   return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
     _, err := tx.Exec(`
+      DELETE FROM relationship
+      WHERE childid = ?`,
+      childId,
+    )
+    if err != nil {
+      return TranslateError(err)
+    }
+    _, err = tx.Exec(`
       INSERT INTO relationship (sireid, damid, childid)
       VALUES (?, ?, ?)`,
       sireId,
@@ -102,14 +117,55 @@ func SaveNewRelationship(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, sire
   })
 }
 
-func UpdateStatuses(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dog *data.Dog) (*sql.Tx, error) {
-  // saves a new dog
+func UpdateRelationshipDam(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, damId, childId int) (*sql.Tx, error) {
+  // updates the Dam of an existing relationship
   return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
-    err := tx.Exec(
-      "CALL UpdateStatuses(?, ?, ?)",
+    _, err := tx.Exec(`
+      UPDATE relationship
+      SET damid = ?
+      WHERE childid = ?`,
+      damId,
+      childId,
+    )
+    if err != nil {
+      return TranslateError(err)
+    }
+    return nil
+  })
+}
+
+func UpdateRelationshipSire(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, sireId, childId int) (*sql.Tx, error) {
+  // updates the Sire of an existing relationship
+  return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
+    _, err := tx.Exec(`
+      UPDATE relationship
+      SET sireid = ?
+      WHERE childid = ?`,
+      sireId,
+      childId,
+    )
+    if err != nil {
+      return TranslateError(err)
+    }
+    return nil
+  })
+}
+
+func UpdateStatusesAndFlags(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dog *data.TestResultDog) (*sql.Tx, error) {
+  // updates dog statuses and override flags
+  return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
+    // calculate flag values
+    inferredStatuses := []string{"CarrierByProgeny", "ClearByParentage"}
+    overrideShakingDogInfer := data.StringInSlice(inferredStatuses, dog.OrigShakingDogStatus) && !data.StringInSlice(inferredStatuses, dog.ShakingDogStatus)
+    overrideCecsInfer := false //TBC
+
+    _, err := tx.Exec(
+      "CALL UpdateStatusesAndFlags(?, ?, ?, ?, ?)",
       dog.Id,
       dog.ShakingDogStatus,
       dog.CecsStatus,
+      overrideShakingDogInfer,
+      overrideCecsInfer,
     )
     if err != nil {
       return TranslateError(err)

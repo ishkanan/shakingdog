@@ -23,6 +23,6 @@ func DogsHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) 
   }
 
   w.Header().Set("Content-Type", "application/json")
-  data, _ := json.Marshal(Dogs{dogs})
+  data, _ := json.Marshal(data.Dogs{dogs})
   w.Write(data)
 }

@@ -6,6 +6,8 @@ import (
   "fmt"
   "net/http"
   "net/url"
+
+  "bitbucket.org/Rusty1958/shakingdog/data"
 )
 
 
@@ -38,19 +40,19 @@ func ParseAndUnescape(query string) (map[string][]string, error) {
 func SendErrorResponse(w http.ResponseWriter, code int, message string) {
   // writes a JSON error response
   w.Header().Set("Content-Type", "application/json")
-  data, _ := json.Marshal(ErrorResponse{
-    Error: &ErrorMessage{
+  responseData, _ := json.Marshal(data.ErrorResponse{
+    Error: &data.ErrorMessage{
       Code: code,
       Message: message,
   }})
-  w.Write(data)
+  w.Write(responseData)
 }
 
-func SendSuccessResponse(w http.ResponseWriter, data []byte) {
+func SendSuccessResponse(w http.ResponseWriter, responseData []byte) {
   // writes a JSON success response
   w.Header().Set("Content-Type", "application/json")
-  if data == nil {
-    data, _ = json.Marshal(&GenericConfirm{Result: "OK"})
+  if responseData == nil {
+    responseData, _ = json.Marshal(data.GenericConfirm{Result: "OK"})
   }
-  w.Write(data)
+  w.Write(responseData)
 }

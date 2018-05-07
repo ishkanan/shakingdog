@@ -21,7 +21,7 @@ CREATE TABLE relationship (
     sireid bigint unsigned NOT NULL,
     damid bigint unsigned NOT NULL,
     childid bigint unsigned NOT NULL,
-    CONSTRAINT UNIQUE (sireid, damid, childid),
+    CONSTRAINT UNIQUE (childid),
     CONSTRAINT `fk_sireid` FOREIGN KEY (sireid) REFERENCES dog (id),
     CONSTRAINT `fk_damid` FOREIGN KEY (damid) REFERENCES dog (id),
     CONSTRAINT `fk_childid` FOREIGN KEY (childid) REFERENCES dog (id));

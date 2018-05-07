@@ -30,7 +30,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
 
   // parse POST body
   decoder := json.NewDecoder(req.Body)
-  var newLitter NewLitter
+  var newLitter data.NewLitter
   err := decoder.Decode(&newLitter)
   if err != nil {
     w.WriteHeader(http.StatusBadRequest)
@@ -77,7 +77,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   sireId := entries[0].Id
   damId := entries[1].Id
   for _, child := range entries[2:] {
-    tx, err = db.SaveNewRelationship(ctx.DBConnection, tx, false, sireId, damId, child.Id)
+    tx, err = db.SaveRelationship(ctx.DBConnection, tx, false, sireId, damId, child.Id)
     if err != nil {
       log.Printf("ERROR: NewLitterHandler: SaveNewRelationship error - %v", err)
       SendErrorResponse(w, ErrServerError, "Database error")

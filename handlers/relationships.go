@@ -23,6 +23,6 @@ func RelationshipsHandler(w http.ResponseWriter, req *http.Request, ctx *Handler
   }
 
   w.Header().Set("Content-Type", "application/json")
-  data, _ := json.Marshal(Relationships{rships})
+  data, _ := json.Marshal(data.Relationships{rships})
   w.Write(data)
 }

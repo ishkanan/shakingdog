@@ -7,6 +7,7 @@ import (
   "net/http"
   "strconv"
 
+  "bitbucket.org/Rusty1958/shakingdog/data"
   "bitbucket.org/Rusty1958/shakingdog/db"
 
   "github.com/gorilla/mux"
@@ -39,7 +40,7 @@ func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   }
 
   w.Header().Set("Content-Type", "application/json")
-  data, _ := json.Marshal(DogReport{
+  data, _ := json.Marshal(data.DogReport{
     Dog: dog,
     FamilyAsChild: familyAsChild,
     FamiliesAsParent: familiesAsParent,
