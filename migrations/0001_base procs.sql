@@ -1,7 +1,7 @@
 USE shakingdog;
 DELIMITER $$
 CREATE DEFINER=`root`@`%` PROCEDURE `SaveNewDog`(
-  IN `name` VARCHAR(100),
+  IN `name` VARCHAR(200),
   IN `gender` VARCHAR(10),
   IN `shakingdogstatus` VARCHAR(20),
   IN `cecsstatus` VARCHAR(20)
