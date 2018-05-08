@@ -75,7 +75,6 @@ func main() {
 		fmt.Sprintf("https://%s", cfg.Okta.Host),
 		cfg.Okta.ClientID,
 		cfg.Okta.ClientSecret,
-		cfg.Server.BaseURL,
 		fmt.Sprintf("https://%s%s%s",
 			cfg.Server.PublicHost,
 			cfg.Server.BaseURL,
@@ -190,7 +189,7 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	// Okta sends us back here after auth
 	router.Handle(
 		fmt.Sprintf("%s%s", cfg.Server.BaseURL, cfg.Okta.AuthPath),
-		oktaAuth.AuthCallbackHandler(),
+		oktaAuth.AuthCallbackHandler(cfg.Server.BaseURL),
 	)
 
 	// unmatched redirect to "/app"

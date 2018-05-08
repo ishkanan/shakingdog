@@ -42,15 +42,15 @@ type Okta struct {
 //
 // domain, clientID and clientSecret should come straight from your Okta org and
 // the configured application.
-// appBaseURL and appAuthCallbackPath allow correct URLs to be built for
+// appAuthCallbackPath allow correct URLs to be built for
 // the full URL redirects to/from Okta
-func NewOktaAuth(domain, clientID, clientSecret, appBaseURL, appAuthCallbackPath string) *Okta {
+func NewOktaAuth(domain, clientID, clientSecret, appAuthCallbackPath string) *Okta {
 	// generate OAuth2 config
 	authCfg := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Scopes:       []string{"openid", "email", "profile", "groups", "address"},
-		RedirectURL:  appBaseURL + appAuthCallbackPath,
+		RedirectURL:  appAuthCallbackPath,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  domain + oktaAuthPath,
 			TokenURL: domain + oktaTokenPath,
@@ -106,7 +106,7 @@ func (o *Okta) LoginHandler() http.Handler {
 // AuthCallbackHandler returns a http.Handler that will process an OAuth2
 // authentication callback. Saving the needed user information into a secure
 // cookie based session
-func (o *Okta) AuthCallbackHandler() http.Handler {
+func (o *Okta) AuthCallbackHandler(appBaseURL string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -154,7 +154,7 @@ func (o *Okta) AuthCallbackHandler() http.Handler {
 		session.Save(r, w)
 
 		// redirect back to /app
-		http.Redirect(w, r, "/app", http.StatusFound)
+		http.Redirect(w, r, appBaseURL + "/app", http.StatusFound)
 	})
 }
 
