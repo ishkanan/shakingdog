@@ -6,6 +6,8 @@ type Dog struct {
   Gender string `json:"gender"`
   ShakingDogStatus string `json:"shakingdogstatus"`
   CecsStatus string `json:"cecsstatus"`
+  ShakingDogInferOverride bool `json:"-"`
+  CecsInferOverride bool `json:"-"`
 }
 
 // a family includes ALL children across ALL litters

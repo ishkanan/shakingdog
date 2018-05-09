@@ -42,7 +42,7 @@ func main() {
   // parse CLI arguments
 	flag.Parse()
   if flag.NFlag() < 1 {
-    fmt.Println("== SLEM / CECS Register ==\n")
+    fmt.Println("== SLEM / CECS Register (Server) ==\n")
     flag.PrintDefaults()
     return
   }
