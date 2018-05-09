@@ -117,6 +117,23 @@ func SaveRelationship(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, sireId,
   })
 }
 
+func UpdateGender(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, dogId int, gender string) (*sql.Tx, error) {
+  // updates the gender of an existing dog
+  return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {
+    _, err := tx.Exec(`
+      UPDATE dog
+      SET gender = ?
+      WHERE id = ?`,
+      gender,
+      dogId,
+    )
+    if err != nil {
+      return TranslateError(err)
+    }
+    return nil
+  })
+}
+
 func UpdateRelationshipDam(dbConn *sql.DB, externTx *sql.Tx, autoCommit bool, damId, childId int) (*sql.Tx, error) {
   // updates the Dam of an existing relationship
   return Transact(dbConn, externTx, autoCommit, func (tx *sql.Tx) error {

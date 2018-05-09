@@ -162,7 +162,7 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 		oktaAuth.SecuredHandler(
 			HandlerWithContext(handlers.NewDogHandler),
 			HandlerWithContext(handlers.NeedAuthHandler),
-	))
+	)).Methods("POST")
 
 	// admin - new litter
 	router.Handle(
@@ -171,6 +171,14 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 			HandlerWithContext(handlers.NewLitterHandler),
 			HandlerWithContext(handlers.NeedAuthHandler),
 	))
+
+	// admin - set gender
+	router.Handle(
+		fmt.Sprintf("%s/api/admin/dog", cfg.Server.BaseURL),
+		oktaAuth.SecuredHandler(
+			HandlerWithContext(handlers.SetGenderHandler),
+			HandlerWithContext(handlers.NeedAuthHandler),
+	)).Methods("PUT")
 
 	// admin - test result
 	router.Handle(

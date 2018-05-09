@@ -43,6 +43,11 @@ type Relationships struct {
   Relationships []Relationship `json:"relationships"`
 }
 
+type SetGender struct {
+  DogId int `json:"dogid"`
+  Gender string `json:"gender"`
+}
+
 type TestResult struct {
   Dog TestResultDog `json:"dog"`
   Sire *Dog `json:"sire"` // pointer allows Nil value
