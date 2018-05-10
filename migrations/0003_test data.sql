@@ -135,7 +135,7 @@ INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginfer
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Brumberhill Blue Tempest', 'D', 4, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Bubbles Fleret Moravia', 'D', 4, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Car z Polešovic', 'D', 5, 4, 0, 0);
-INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Cedarhill Irresistabelle', 'B', 5, 4, 0, 0);
+INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Cedarhill Irresistabelle', 'B', 3, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Cedarhill Legally Blonde', 'B', 5, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Cedarhill No Excuse Needed', 'D', 4, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Chorbeck Chatty Man JW ShCM', 'D', 4, 4, 0, 0);
@@ -180,7 +180,7 @@ INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginfer
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Stella Rover Antey', 'D', 4, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Sweeping Slow Fox', 'D', 4, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Toftahill GAME ON', 'D', 4, 4, 0, 0);
-INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Toftahill Inside Out', 'D', 5, 4, 0, 0);
+INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Toftahill Inside Out', 'D', 3, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Tythrop Tap On Wood For Ravenside', 'D', 5, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Tythrop Tapas', 'D', 4, 4, 0, 0);
 INSERT INTO dog (name, gender, shakingdogstatusid, cecsstatusid, shakingdoginferoverride, cecsinferoverride) VALUES ('Wendy z Plešného jezera', 'B', 5, 4, 0, 0);
