@@ -18,7 +18,7 @@ func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   // get dog based on supplied ID
   vars := mux.Vars(req)
   dogId, _ := strconv.Atoi(vars["id"])
-  dog, err := db.GetDog(ctx.DBConnection, dogId)
+  dog, err := db.GetDog(ctx.DBConn, dogId)
   if err == sql.ErrNoRows {
     SendErrorResponse(w, ErrNotFound, strconv.Itoa(dog.Id))
     return
@@ -30,7 +30,7 @@ func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
 
   // get family information
   familyAsChild, familiesAsParent, err := db.GetFamilies(
-    ctx.DBConnection,
+    ctx.DBConn,
     dogId,
   )
   if err != nil {

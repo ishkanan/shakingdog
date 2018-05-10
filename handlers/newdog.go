@@ -40,13 +40,30 @@ func NewDogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
     return
   }
 
-  // save the new dog
-  _, err = db.SaveNewDog(ctx.DBConnection, nil, true, &newDog)
+  // start Tx
+  txConn, err := ctx.DBConn.BeginReadUncommitted(nil)
+  if err != nil {
+    log.Printf("ERROR: NewDogHandler: Tx Begin error - %v", err)
+    SendErrorResponse(w, ErrServerError, "Database error")
+    return
+  }
+  defer txConn.Rollback()
+
+  // save new dog
+  err = db.SaveNewDog(txConn, &newDog)
   if err == db.ErrUniqueViolation {
     SendErrorResponse(w, ErrDogExists, newDog.Name)
     return
   } else if err != nil {
     log.Printf("ERROR: NewDogHandler: SaveNewDog error - %v", err)
+    SendErrorResponse(w, ErrServerError, "Database error")
+    return
+  }
+
+  // commit Tx
+  err = txConn.Commit()
+  if err != nil {
+    log.Printf("ERROR: NewDogHandler: Tx Commit error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }

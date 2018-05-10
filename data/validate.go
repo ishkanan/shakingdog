@@ -1,6 +1,15 @@
 package data
 
 
+func IntInSlice(values []int, value int) bool {
+  for i, _ := range values {
+    if values[i] == value {
+      return true
+    }
+  }
+  return false
+}
+
 func StringInSlice(values []string, value string) bool {
   for i, _ := range values {
     if values[i] == value {

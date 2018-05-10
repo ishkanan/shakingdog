@@ -30,7 +30,7 @@ func _DogsFromRows(rows *sql.Rows) ([]data.Dog, error) {
   return dogs, nil
 }
 
-func GetDogs(dbConn *sql.DB) ([]data.Dog, error) {
+func GetDogs(dbConn *Connection) ([]data.Dog, error) {
   // fetches all dogs
   rows, err := dbConn.Query(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -53,7 +53,7 @@ func GetDogs(dbConn *sql.DB) ([]data.Dog, error) {
   return dogs, nil
 }
 
-func GetDog(dbConn *sql.DB, id int) (dog data.Dog, err error) {
+func GetDog(dbConn *Connection, id int) (dog data.Dog, err error) {
   // fetches an individual dog
   err = dbConn.QueryRow(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -76,7 +76,7 @@ func GetDog(dbConn *sql.DB, id int) (dog data.Dog, err error) {
   return
 }
 
-func GetDogByName(dbConn *sql.DB, name string) (dog data.Dog, err error) {
+func GetDogByName(dbConn *Connection, name string) (dog data.Dog, err error) {
   // fetches an individual dog
   err = dbConn.QueryRow(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -99,7 +99,7 @@ func GetDogByName(dbConn *sql.DB, name string) (dog data.Dog, err error) {
   return
 }
 
-func GetOrphans(dbConn *sql.DB) ([]data.Dog, error) {
+func GetOrphans(dbConn *Connection) ([]data.Dog, error) {
   // fetches all dogs with no parents
   rows, err := dbConn.Query(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -126,7 +126,7 @@ func GetOrphans(dbConn *sql.DB) ([]data.Dog, error) {
   return dogs, nil
 }
 
-func GetRelationships(dbConn *sql.DB) ([]data.Relationship, error) {
+func GetRelationships(dbConn *Connection) ([]data.Relationship, error) {
   // fetches all relationships
   rows, err := dbConn.Query(`
     SELECT
@@ -176,7 +176,7 @@ func GetRelationships(dbConn *sql.DB) ([]data.Relationship, error) {
   return rships, nil
 }
 
-func GetSires(dbConn *sql.DB, damId int) ([]data.Dog, error) {
+func GetSires(dbConn *Connection, damId int) ([]data.Dog, error) {
   // fetches all Sires that have mated with a particular Dam
   rows, err := dbConn.Query(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -204,7 +204,7 @@ func GetSires(dbConn *sql.DB, damId int) ([]data.Dog, error) {
   return dogs, nil
 }
 
-func GetDams(dbConn *sql.DB, sireId int) ([]data.Dog, error) {
+func GetDams(dbConn *Connection, sireId int) ([]data.Dog, error) {
   // fetches all Dams that have mated with a particular Sire
   rows, err := dbConn.Query(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -232,7 +232,7 @@ func GetDams(dbConn *sql.DB, sireId int) ([]data.Dog, error) {
   return dogs, nil
 }
 
-func GetChildren(dbConn *sql.DB, sireId, damId int) ([]data.Dog, error) {
+func GetChildren(dbConn *Connection, sireId, damId int) ([]data.Dog, error) {
   // fetches all children of a sire/dam pair
   rows, err := dbConn.Query(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -261,7 +261,7 @@ func GetChildren(dbConn *sql.DB, sireId, damId int) ([]data.Dog, error) {
   return dogs, nil
 }
 
-func GetParents(dbConn *sql.DB, childId int) (sire data.Dog, dam data.Dog, err error) {
+func GetParents(dbConn *Connection, childId int) (sire data.Dog, dam data.Dog, err error) {
   // fetches the parents of a child
   err = dbConn.QueryRow(`
     SELECT sire.id, sire.name, sire.gender, s1.status, s2.status, sire.shakingdoginferoverride, sire.cecsinferoverride,
@@ -300,7 +300,7 @@ func GetParents(dbConn *sql.DB, childId int) (sire data.Dog, dam data.Dog, err e
   return
 }
 
-func GetSiblings(dbConn *sql.DB, dogId int) ([]data.Dog, error) {
+func GetSiblings(dbConn *Connection, dogId int) ([]data.Dog, error) {
   // fetches all siblings of a particular dog
   rows, err := dbConn.Query(`
     SELECT d.id, d.name, d.gender, s1.status, s2.status, d.shakingdoginferoverride, d.cecsinferoverride
@@ -332,7 +332,7 @@ func GetSiblings(dbConn *sql.DB, dogId int) ([]data.Dog, error) {
   return dogs, nil
 }
 
-func GetFamilyOfChild(dbConn *sql.DB, dogId int) (data.Family, error) {
+func GetFamilyOfChild(dbConn *Connection, dogId int) (data.Family, error) {
   // fetches the family of a child
   sire, dam, err := GetParents(dbConn, dogId)
   if err != nil {
@@ -347,7 +347,7 @@ func GetFamilyOfChild(dbConn *sql.DB, dogId int) (data.Family, error) {
   return data.Family{Sire: sire, Dam: dam, Children: children}, nil
 }
 
-func GetFamiliesOfSire(dbConn *sql.DB, sireId int) ([]data.Family, error) {
+func GetFamiliesOfSire(dbConn *Connection, sireId int) ([]data.Family, error) {
   // fetches families where a dog was a Sire
   sire, err := GetDog(dbConn, sireId)
   if err != nil {
@@ -371,7 +371,7 @@ func GetFamiliesOfSire(dbConn *sql.DB, sireId int) ([]data.Family, error) {
   return families, nil
 }
 
-func GetFamiliesOfDam(dbConn *sql.DB, damId int) ([]data.Family, error) {
+func GetFamiliesOfDam(dbConn *Connection, damId int) ([]data.Family, error) {
   // fetches families where a dog was a Dam
   dam, err := GetDog(dbConn, damId)
   if err != nil {
@@ -395,7 +395,7 @@ func GetFamiliesOfDam(dbConn *sql.DB, damId int) ([]data.Family, error) {
   return families, nil
 }
 
-func GetFamilies(dbConn *sql.DB, dogId int) (*data.Family, []data.Family, error) {
+func GetFamilies(dbConn *Connection, dogId int) (*data.Family, []data.Family, error) {
   // fetches all families where a dog was either a parent or a sibling
   dog, err := GetDog(dbConn, dogId)
   if err != nil {

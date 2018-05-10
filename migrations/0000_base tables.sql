@@ -1,5 +1,5 @@
 CREATE DATABASE shakingdog;
-GRANT SELECT,INSERT,UPDATE ON shakingdog.* TO 'shakingdog_webuser'@'localhost' IDENTIFIED BY 'tree98shoes2048';
+GRANT SELECT,INSERT,UPDATE,DELETE ON shakingdog.* TO 'shakingdog_webuser'@'localhost' IDENTIFIED BY 'tree98shoes2048';
 USE shakingdog;
 CREATE TABLE ailmentstatus (
     id bigint unsigned NOT NULL auto_increment PRIMARY KEY,

@@ -1,14 +1,13 @@
 package handlers
 
 import (
-  "database/sql"
-
   "bitbucket.org/Rusty1958/shakingdog/auth"
   "bitbucket.org/Rusty1958/shakingdog/config"
+  "bitbucket.org/Rusty1958/shakingdog/db"
 )
 
 type HandlerContext struct {
   Config *config.Config
-  DBConnection *sql.DB
+  DBConn *db.Connection
   Okta *auth.Okta
 }

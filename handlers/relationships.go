@@ -13,7 +13,7 @@ import (
 
 func RelationshipsHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   // fetch all relationships
-  rships, err := db.GetRelationships(ctx.DBConnection)
+  rships, err := db.GetRelationships(ctx.DBConn)
   if err == sql.ErrNoRows {
     rships = []data.Relationship{}
   } else if err != nil {

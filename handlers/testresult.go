@@ -36,9 +36,14 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
     return
   }
 
-  // everything is done in one transaction, with panic safety
-  var tx *sql.Tx
-  deferred := false
+  // start Tx
+  txConn, err := ctx.DBConn.BeginReadUncommitted(nil)
+  if err != nil {
+    log.Printf("ERROR: TestResultHandler: Tx Begin error - %v", err)
+    SendErrorResponse(w, ErrServerError, "Database error")
+    return
+  }
+  defer txConn.Rollback()
 
   // FIRST, create any new dogs (sire, dam, test result dog)
   entries := []*data.Dog{testResult.Sire, testResult.Dam, testResult.Dog.AsDataDog()}
@@ -51,7 +56,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
       }
 
       // seems valid, so create dog
-      tx, err = db.SaveNewDog(ctx.DBConnection, tx, false, dog)
+      err = db.SaveNewDog(txConn, dog)
       if err == db.ErrUniqueViolation {
         SendErrorResponse(w, ErrDogExists, dog.Name)
         return
@@ -60,33 +65,22 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
         SendErrorResponse(w, ErrServerError, "Database error")
         return
       }
-
-      // only need to defer on first create
-      if !deferred {
-        defer db.PanicSafeRollback(tx)
-        deferred = true
-      }
     }
   }
 
   // THEN, update statuses and override flags for the test result dog
-  tx, err = db.UpdateStatusesAndFlags(ctx.DBConnection, tx, false, &testResult.Dog)
+  err = db.UpdateStatusesAndFlags(txConn, &testResult.Dog)
   if err != nil {
     log.Printf("ERROR: TestResultHandler: UpdateStatusesAndFlags error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
-  }
-  if !deferred {
-    // defer if we haven't yet
-    defer db.PanicSafeRollback(tx)
-    deferred = true
   }
 
   // THEN, update parental relationship (if requested) with following rules:
   //   1) if child has no parents, both Sire and Dam are required
   if testResult.Sire != nil || testResult.Dam != nil {
     // check parental relationship
-    _, _, err = db.GetParents(ctx.DBConnection, testResult.Dog.Id)
+    _, _, err = db.GetParents(txConn, testResult.Dog.Id)
     if err != nil && err != sql.ErrNoRows {
       log.Printf("ERROR: TestResultHandler: GetParents error - %v", err)
       SendErrorResponse(w, ErrServerError, "Database error")
@@ -102,7 +96,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
 
     if (testResult.Sire != nil && testResult.Dam != nil) {
       // update Sire and Dam
-      tx, err = db.SaveRelationship(ctx.DBConnection, tx, false, testResult.Sire.Id, testResult.Dam.Id, testResult.Dog.Id)
+      err = db.SaveRelationship(txConn, testResult.Sire.Id, testResult.Dam.Id, testResult.Dog.Id)
       if err != nil {
         log.Printf("ERROR: TestResultHandler: SaveRelationship error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")
@@ -110,7 +104,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
       }
     } else if (testResult.Dam != nil) {
       // update Dam only
-      tx, err = db.UpdateRelationshipDam(ctx.DBConnection, tx, false, testResult.Dam.Id, testResult.Dog.Id)
+      err = db.UpdateRelationshipDam(txConn, testResult.Dam.Id, testResult.Dog.Id)
       if err != nil {
         log.Printf("ERROR: TestResultHandler: UpdateRelationshipDam error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")
@@ -118,7 +112,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
       }
     } else if (testResult.Sire != nil) {
       // update Sire only
-      tx, err = db.UpdateRelationshipSire(ctx.DBConnection, tx, false, testResult.Sire.Id, testResult.Dog.Id)
+      err = db.UpdateRelationshipSire(txConn, testResult.Sire.Id, testResult.Dog.Id)
       if err != nil {
         log.Printf("ERROR: TestResultHandler: UpdateRelationshipSire error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")
@@ -127,10 +121,10 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
     }
   }
 
-  // try commit
-  err = tx.Commit()
+  // commit Tx
+  err = txConn.Commit()
   if err != nil {
-    log.Printf("ERROR: TestResultHandler: Transaction commit error - %v", err)
+    log.Printf("ERROR: TestResultHandler: Tx Commit error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }

@@ -29,8 +29,6 @@ var (
 
 func init() {
 	flag.StringVar(&confFile, "f", "", "Path to the configuration file.")
-
-	handlerContext = &handlers.HandlerContext{}
 }
 
 func main() {
@@ -52,7 +50,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error reading configuration file - %v", err)
 	}
-	handlerContext.Config = cfg
+	handlerContext = &handlers.HandlerContext{Config: cfg}
 
 	// read the CA file once instead of every request
 	// get the lists of certs and keys
@@ -85,7 +83,7 @@ func main() {
 	s.Handler = BuildRouter(cfg, handlerContext.Okta)
 
 	// create DB connection
-	handlerContext.DBConnection, err = db.NewMySQLConn(
+	handlerContext.DBConn, err = db.NewMySQLConn(
 		cfg.Server.DBHost,
 		cfg.Server.DBName,
 		cfg.Server.DBUserName,

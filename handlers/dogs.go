@@ -13,7 +13,7 @@ import (
 
 func DogsHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   // fetch all dogs
-  dogs, err := db.GetDogs(ctx.DBConnection)
+  dogs, err := db.GetDogs(ctx.DBConn)
   if err == sql.ErrNoRows {
     dogs = []data.Dog{}
   } else if err != nil {

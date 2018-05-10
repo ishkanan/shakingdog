@@ -43,7 +43,7 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
 
   // do not allow gender change if dog has parented children
   var families []data.Family
-  dog, err := db.GetDog(ctx.DBConnection, setGender.DogId)
+  dog, err := db.GetDog(ctx.DBConn, setGender.DogId)
   if err == sql.ErrNoRows {
     SendErrorResponse(w, ErrBadRequest, "Dog not found")
     return
@@ -53,9 +53,9 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
     return
   }
   if dog.Gender == "D" {
-    families, err = db.GetFamiliesOfSire(ctx.DBConnection, setGender.DogId)
+    families, err = db.GetFamiliesOfSire(ctx.DBConn, setGender.DogId)
   } else if dog.Gender == "B" {
-    families, err = db.GetFamiliesOfDam(ctx.DBConnection, setGender.DogId)
+    families, err = db.GetFamiliesOfDam(ctx.DBConn, setGender.DogId)
   }
   if err != nil {
     log.Printf("ERROR: SetGenderHandler: GetFamiliesOfSire/Dam error - %v", err)
@@ -63,18 +63,31 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
     return
   }
   if len(families) > 0 {
-    SendErrorResponse(
-      w,
-      ErrAlreadyParent,
-      fmt.Sprintf("%v litter(s)", len(families)),
-    )
+    SendErrorResponse(w, ErrAlreadyParent, fmt.Sprintf("%v litter(s)", len(families)))
     return
   }
 
-  // atomically update gender
-  _, err = db.UpdateGender(ctx.DBConnection, nil, true, setGender.DogId, setGender.Gender)
+  // start Tx
+  txConn, err := ctx.DBConn.BeginReadUncommitted(nil)
+  if err != nil {
+    log.Printf("ERROR: SetGenderHandler: Tx Begin error - %v", err)
+    SendErrorResponse(w, ErrServerError, "Database error")
+    return
+  }
+  defer txConn.Rollback()
+
+  // update gender
+  err = db.UpdateGender(txConn, setGender.DogId, setGender.Gender)
   if err != nil {
     log.Printf("ERROR: SetGenderHandler: UpdateGender error - %v", err)
+    SendErrorResponse(w, ErrServerError, "Database error")
+    return
+  }
+
+  // commit Tx
+  err = txConn.Commit()
+  if err != nil {
+    log.Printf("ERROR: SetGenderHandler: Tx Commit error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }

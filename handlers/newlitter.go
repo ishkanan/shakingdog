@@ -1,7 +1,6 @@
 package handlers
 
 import (
-  "database/sql"
   "encoding/json"
   "log"
   "net/http"
@@ -37,9 +36,14 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
     return
   }
 
-  // everything is done in one transaction, with panic safety
-  var tx *sql.Tx
-  deferred := false
+  // start Tx
+  txConn, err := ctx.DBConn.BeginReadUncommitted(nil)
+  if err != nil {
+    log.Printf("ERROR: NewLitterHandler: Tx Begin error - %v", err)
+    SendErrorResponse(w, ErrServerError, "Database error")
+    return
+  }
+  defer txConn.Rollback()
 
   // FIRST, create any new dogs
   entries := []*data.Dog{&newLitter.Sire, &newLitter.Dam}
@@ -55,7 +59,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
       }
 
       // seems valid, so create dog
-      tx, err = db.SaveNewDog(ctx.DBConnection, tx, false, dog)
+      err = db.SaveNewDog(txConn, dog)
       if err == db.ErrUniqueViolation {
         SendErrorResponse(w, ErrDogExists, dog.Name)
         return
@@ -64,12 +68,6 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
         SendErrorResponse(w, ErrServerError, "Database error")
         return
       }
-
-      // only need to defer on first create
-      if !deferred {
-        defer db.PanicSafeRollback(tx)
-        deferred = true
-      }
     }
   }
   
@@ -77,24 +75,18 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   sireId := entries[0].Id
   damId := entries[1].Id
   for _, child := range entries[2:] {
-    tx, err = db.SaveRelationship(ctx.DBConnection, tx, false, sireId, damId, child.Id)
+    err = db.SaveRelationship(txConn, sireId, damId, child.Id)
     if err != nil {
       log.Printf("ERROR: NewLitterHandler: SaveNewRelationship error - %v", err)
       SendErrorResponse(w, ErrServerError, "Database error")
       return
     }
-
-    // must defer if we haven't yet
-    if !deferred {
-      defer db.PanicSafeRollback(tx)
-      deferred = true
-    }
   }
 
-  // try commit
-  err = tx.Commit()
+  // commit Tx
+  err = txConn.Commit()
   if err != nil {
-    log.Printf("ERROR: NewLitterHandler: Transaction commit error - %v", err)
+    log.Printf("ERROR: NewLitterHandler: Tx Commit error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }

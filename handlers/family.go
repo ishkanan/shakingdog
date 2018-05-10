@@ -39,7 +39,7 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
 
   // fetch children (if any)
   children, err := db.GetChildren(
-    ctx.DBConnection,
+    ctx.DBConn,
     sireId,
     damId,
   )
@@ -50,13 +50,13 @@ func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
   }
 
   // fetch parents
-  sire, err := db.GetDog(ctx.DBConnection, sireId)
+  sire, err := db.GetDog(ctx.DBConn, sireId)
   if err != nil {
     log.Printf("ERROR: FamilyHandler: GetDog error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
-  dam, err := db.GetDog(ctx.DBConnection, damId)
+  dam, err := db.GetDog(ctx.DBConn, damId)
   if err != nil {
     log.Printf("ERROR: FamilyHandler: GetDog error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
