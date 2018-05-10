@@ -60,28 +60,29 @@ func main() {
 	clearStatuses = []string{"Clear", "ClearByParentage"}
 	labConfirmedStatuses = []string{"Affected", "Carrier", "Clear"}
 
-	// 1) get orphan dogs (i.e. top of relationship "tree")
+	// get orphan dogs (i.e. top of relationship "tree")
 	orphans, err := db.GetOrphans(txConn)
 	if err != nil {
 		log.Fatalf("ERROR: GetOrphans error - %v", err)
 	}
 	
-	// 2) for each orphan, CarrierByProgeny(dog)
+  // for each orphan, ClearByParentage(dog)
+  history = []int{}
+  for i, _ := range orphans {
+    log.Printf("INFO: SetClearByParentage: Processing orphan '%s'", orphans[i].Name)
+    err = SetClearByParentage(&orphans[i], "└--")
+    if err != nil {
+      log.Fatalf("ERROR: SetClearByParentage error - %v", err)
+    }
+  }
+
+	// for each orphan, CarrierByProgeny(dog)
 	history = []int{}
   for i, _ := range orphans {
-		err = SetCarrierByProgeny(&orphans[i])
+    log.Printf("INFO: SetCarrierByProgeny: Processing orphan '%s'", orphans[i].Name)
+		err = SetCarrierByProgeny(&orphans[i], "└--")
 		if err != nil {
 			log.Fatalf("ERROR: SetCarrierByProgeny error - %v", err)
-		}
-	}
-
-	// 3) for each orphan, ClearByParentage(dog)
-	history = []int{}
-	for i, _ := range orphans {
-		log.Printf("INFO: SetClearByParentage: Processing orphan '%s'", orphans[i].Name)
-		err = SetClearByParentage(&orphans[i], "└--")
-		if err != nil {
-			log.Fatalf("ERROR: SetClearByParentage error - %v", err)
 		}
 	}
 

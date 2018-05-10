@@ -39,7 +39,7 @@ func SetClearByParentage(dog *data.Dog, logPrefix string) error {
   // 1) self AND partner are Clear/ClearByParentage, AND
   // 2) child hasn't been processed, AND
   // 3) child hasn't been lab-tested, AND
-  // 4) child inferoverride flag is FALSE
+  // 4) child inferoverride flag is False
   for i, _ := range families {
     family := &families[i]
 
