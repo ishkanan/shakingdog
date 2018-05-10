@@ -7,7 +7,7 @@ CREATE TABLE ailmentstatus (
     CONSTRAINT UNIQUE (status));
 CREATE TABLE dog (
     id bigint unsigned NOT NULL auto_increment PRIMARY KEY,
-    name varchar(200) NOT NULL,
+    name varchar(180) NOT NULL,
     gender varchar(10) NOT NULL,
     shakingdogstatusid bigint unsigned NOT NULL,
     cecsstatusid bigint unsigned NOT NULL,
