@@ -1,5 +1,17 @@
 package data
 
+type AuditEntry struct {
+  Id int `json:"id"`
+  Stamp string `json:"stamp"`
+  Actor string `json:"actor"`
+  Action string `json:"action"`
+}
+
+type AuditEntries struct {
+  System []AuditEntry `json:"system"`
+  User []AuditEntry `json:"user"`
+}
+
 type CouplesReport struct {
   Sire Dog `json:"sire"`
   Dam Dog `json:"dam"`

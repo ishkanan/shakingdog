@@ -77,7 +77,7 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   defer txConn.Rollback()
 
   // update gender
-  err = db.UpdateGender(txConn, setGender.DogId, setGender.Gender)
+  err = db.UpdateGender(txConn, setGender.DogId, setGender.Gender, username)
   if err != nil {
     log.Printf("ERROR: SetGenderHandler: UpdateGender error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")

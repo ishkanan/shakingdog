@@ -56,7 +56,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
       }
 
       // seems valid, so create dog
-      err = db.SaveNewDog(txConn, dog)
+      err = db.SaveNewDog(txConn, dog, username)
       if err == db.ErrUniqueViolation {
         SendErrorResponse(w, ErrDogExists, dog.Name)
         return
@@ -69,7 +69,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
   }
 
   // THEN, update statuses and override flags for the test result dog
-  err = db.UpdateStatusesAndFlags(txConn, &testResult.Dog)
+  err = db.UpdateStatusesAndFlags(txConn, &testResult.Dog, username)
   if err != nil {
     log.Printf("ERROR: TestResultHandler: UpdateStatusesAndFlags error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
@@ -96,7 +96,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
 
     if (testResult.Sire != nil && testResult.Dam != nil) {
       // update Sire and Dam
-      err = db.SaveRelationship(txConn, testResult.Sire.Id, testResult.Dam.Id, testResult.Dog.Id)
+      err = db.SaveRelationship(txConn, testResult.Sire.Id, testResult.Dam.Id, testResult.Dog.Id, username)
       if err != nil {
         log.Printf("ERROR: TestResultHandler: SaveRelationship error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")
@@ -104,7 +104,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
       }
     } else if (testResult.Dam != nil) {
       // update Dam only
-      err = db.UpdateRelationshipDam(txConn, testResult.Dam.Id, testResult.Dog.Id)
+      err = db.UpdateRelationshipDam(txConn, testResult.Dam.Id, testResult.Dog.Id, username)
       if err != nil {
         log.Printf("ERROR: TestResultHandler: UpdateRelationshipDam error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")
@@ -112,7 +112,7 @@ func TestResultHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCon
       }
     } else if (testResult.Sire != nil) {
       // update Sire only
-      err = db.UpdateRelationshipSire(txConn, testResult.Sire.Id, testResult.Dog.Id)
+      err = db.UpdateRelationshipSire(txConn, testResult.Sire.Id, testResult.Dog.Id, username)
       if err != nil {
         log.Printf("ERROR: TestResultHandler: UpdateRelationshipSire error - %v", err)
         SendErrorResponse(w, ErrServerError, "Database error")

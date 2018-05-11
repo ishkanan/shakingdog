@@ -25,3 +25,9 @@ CREATE TABLE relationship (
     CONSTRAINT `fk_sireid` FOREIGN KEY (sireid) REFERENCES dog (id),
     CONSTRAINT `fk_damid` FOREIGN KEY (damid) REFERENCES dog (id),
     CONSTRAINT `fk_childid` FOREIGN KEY (childid) REFERENCES dog (id));
+CREATE TABLE audit (
+    id bigint unsigned NOT NULL auto_increment PRIMARY KEY,
+    stamp timestamp DEFAULT CURRENT_TIMESTAMP,
+    actor varchar(50) NOT NULL,
+    action text NOT NULL,
+    INDEX(actor));

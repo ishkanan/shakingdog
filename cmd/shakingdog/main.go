@@ -126,25 +126,25 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	router.Handle(
 		fmt.Sprintf("%s/api/dogs", cfg.Server.BaseURL),
 		HandlerWithContext(handlers.DogsHandler),
-	)
+	).Methods("GET")
 
 	// single dog fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/dog/{id:[0-9]+}", cfg.Server.BaseURL),
 		HandlerWithContext(handlers.DogHandler),
-	)
+	).Methods("GET")
 
 	// family fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/family", cfg.Server.BaseURL),
 		HandlerWithContext(handlers.FamilyHandler),
-	)
+	).Methods("GET")
 
 	// relationships fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/relationships", cfg.Server.BaseURL),
 		HandlerWithContext(handlers.RelationshipsHandler),
-	)
+	).Methods("GET")
 	
 	// handy Okta check
 	router.Handle(
@@ -152,7 +152,15 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 		oktaAuth.SecuredHandler(
 			HandlerWithContext(handlers.AuthCheckHandler),
 			HandlerWithContext(handlers.NeedAuthHandler),
-	))
+	)).Methods("GET")
+
+	// admin - audit
+	router.Handle(
+		fmt.Sprintf("%s/api/admin/audit", cfg.Server.BaseURL),
+		oktaAuth.SecuredHandler(
+			HandlerWithContext(handlers.AuditHandler),
+			HandlerWithContext(handlers.NeedAuthHandler),
+	)).Methods("GET")
 
 	// admin - new dog
 	router.Handle(
@@ -168,7 +176,7 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 		oktaAuth.SecuredHandler(
 			HandlerWithContext(handlers.NewLitterHandler),
 			HandlerWithContext(handlers.NeedAuthHandler),
-	))
+	)).Methods("POST")
 
 	// admin - set gender
 	router.Handle(
@@ -184,19 +192,19 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 		oktaAuth.SecuredHandler(
 			HandlerWithContext(handlers.TestResultHandler),
 			HandlerWithContext(handlers.NeedAuthHandler),
-	))
+	)).Methods("POST")
 
 	// sets the state cookie and bounces user to the Okta login page
 	router.Handle(
 		fmt.Sprintf("%s%s", cfg.Server.BaseURL, cfg.Okta.LoginPath),
 		oktaAuth.LoginHandler(),
-	)
+	).Methods("GET")
 
 	// Okta sends us back here after auth
 	router.Handle(
 		fmt.Sprintf("%s%s", cfg.Server.BaseURL, cfg.Okta.AuthPath),
 		oktaAuth.AuthCallbackHandler(cfg.Server.BaseURL),
-	)
+	).Methods("GET")
 
 	// unmatched redirect to "/app"
 	router.Handle(
@@ -204,7 +212,7 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 		http.RedirectHandler(
 			fmt.Sprintf("%s/app", cfg.Server.BaseURL),
 			http.StatusMovedPermanently,
-	))
+	)).Methods("GET")
 
 	return router
 }

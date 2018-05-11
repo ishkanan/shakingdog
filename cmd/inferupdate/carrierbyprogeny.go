@@ -28,6 +28,12 @@ func SetCarrierByProgeny(dog *data.Dog, logPrefix string) error {
     return nil
   }
 
+  // skip if already CarrierByProgeny
+  if dog.ShakingDogStatus == "CarrierByProgeny" {
+    log.Printf("INFO: SetCarrierByProgeny: %s Skipping as already CarrierByProgeny.", logPrefix)
+    return nil
+  }
+
   // get immediate families of dog
   var err error
   var families []data.Family
@@ -73,7 +79,7 @@ func SetCarrierByProgeny(dog *data.Dog, logPrefix string) error {
           logPrefix,
           dog.ShakingDogStatus,
         )
-        err = db.UpdateSlemStatus(txConn, dog, "CarrierByProgeny")
+        err = db.UpdateSlemStatus(txConn, dog, "CarrierByProgeny", "System")
         if err != nil {
           return err
         }

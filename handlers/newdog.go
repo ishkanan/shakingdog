@@ -50,7 +50,7 @@ func NewDogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext
   defer txConn.Rollback()
 
   // save new dog
-  err = db.SaveNewDog(txConn, &newDog)
+  err = db.SaveNewDog(txConn, &newDog, username)
   if err == db.ErrUniqueViolation {
     SendErrorResponse(w, ErrDogExists, newDog.Name)
     return

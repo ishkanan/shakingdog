@@ -59,7 +59,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
       }
 
       // seems valid, so create dog
-      err = db.SaveNewDog(txConn, dog)
+      err = db.SaveNewDog(txConn, dog, username)
       if err == db.ErrUniqueViolation {
         SendErrorResponse(w, ErrDogExists, dog.Name)
         return
@@ -75,7 +75,7 @@ func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   sireId := entries[0].Id
   damId := entries[1].Id
   for _, child := range entries[2:] {
-    err = db.SaveRelationship(txConn, sireId, damId, child.Id)
+    err = db.SaveRelationship(txConn, sireId, damId, child.Id, username)
     if err != nil {
       log.Printf("ERROR: NewLitterHandler: SaveNewRelationship error - %v", err)
       SendErrorResponse(w, ErrServerError, "Database error")

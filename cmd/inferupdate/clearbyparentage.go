@@ -37,9 +37,10 @@ func SetClearByParentage(dog *data.Dog, logPrefix string) error {
 
   // update each child to ClearByParentage if:
   // 1) self AND partner are Clear/ClearByParentage, AND
-  // 2) child hasn't been processed, AND
-  // 3) child hasn't been lab-tested, AND
-  // 4) child inferoverride flag is False
+  // 2) child is not already ClearByParentage, AND
+  // 3) child hasn't been processed, AND
+  // 4) child hasn't been lab-tested, AND
+  // 5) child inferoverride flag is False
   for i, _ := range families {
     family := &families[i]
 
@@ -54,18 +55,24 @@ func SetClearByParentage(dog *data.Dog, logPrefix string) error {
       child := &family.Children[j]
       
       // rule #2
+      if child.ShakingDogStatus == "ClearByParentage" {
+        log.Printf("INFO: SetClearByParentage: %s Skipping child '%s' update as already ClearByParentage.", logPrefix, child.Name)
+        continue
+      }
+
+      // rule #3
       if data.IntInSlice(history, child.Id) {
         log.Printf("INFO: SetClearByParentage: %s Skipping child '%s' update as already processed.", logPrefix, child.Name)
         continue
       }
 
-      // rule #3
+      // rule #4
       if data.StringInSlice(labConfirmedStatuses, child.ShakingDogStatus) {
         log.Printf("INFO: SetClearByParentage: %s Skipping child '%s' update as has been lab-tested.", logPrefix, child.Name)
         continue
       }
 
-      // rule #4
+      // rule #5
       if child.ShakingDogInferOverride {
         log.Printf("INFO: SetClearByParentage: %s Skipping child '%s' update as infer override flag is set.", logPrefix, child.Name)
         continue
@@ -77,7 +84,7 @@ func SetClearByParentage(dog *data.Dog, logPrefix string) error {
         child.Name,
         child.ShakingDogStatus,
       )
-      err = db.UpdateSlemStatus(txConn, child, "ClearByParentage")
+      err = db.UpdateSlemStatus(txConn, child, "ClearByParentage", "System")
       if err != nil {
         return err
       }
