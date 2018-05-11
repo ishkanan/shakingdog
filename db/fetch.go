@@ -55,7 +55,8 @@ func GetSystemAuditEntries(dbConn *Connection) ([]data.AuditEntry, error) {
   rows, err := dbConn.Query(`
     SELECT id, stamp, actor, action
     FROM audit
-    WHERE actor = 'System'`,
+    WHERE actor = 'System'
+    ORDER BY stamp DESC`,
   )
   if err != nil {
     return nil, err
@@ -75,7 +76,8 @@ func GetUserAuditEntries(dbConn *Connection) ([]data.AuditEntry, error) {
   rows, err := dbConn.Query(`
     SELECT id, stamp, actor, action
     FROM audit
-    WHERE actor <> 'System'`,
+    WHERE actor <> 'System'
+    ORDER BY stamp DESC`,
   )
   if err != nil {
     return nil, err
