@@ -12,20 +12,9 @@ import (
 
 
 func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
-  // Okta JWT provides group membership info
+  // get authorised user
   oktaContext := req.Context()
   username := auth.UsernameFromContext(oktaContext)
-  groups := auth.GroupsFromContext(oktaContext)
-
-  // verify the user is a SLEM admin
-  if !auth.IsSlemAdmin(groups) {
-    log.Printf(
-      "INFO: NewLitterHandler: '%s' tried to save a new litter but does not have permission.",
-      username,
-    )
-    SendErrorResponse(w, ErrForbidden, "Not an admin")
-    return
-  }
 
   // parse POST body
   decoder := json.NewDecoder(req.Body)
