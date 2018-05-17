@@ -178,14 +178,6 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 			HandlerWithContext(handlers.NeedAuthHandler),
 	)).Methods("POST")
 
-	// admin - set gender
-	router.Handle(
-		fmt.Sprintf("%s/api/admin/dog", cfg.Server.BaseURL),
-		oktaAuth.SecuredHandler(
-			HandlerWithContext(handlers.SetGenderHandler),
-			HandlerWithContext(handlers.NeedAuthHandler),
-	)).Methods("PUT")
-
 	// admin - test result
 	router.Handle(
 		fmt.Sprintf("%s/api/admin/testresult", cfg.Server.BaseURL),
@@ -193,6 +185,14 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 			HandlerWithContext(handlers.TestResultHandler),
 			HandlerWithContext(handlers.NeedAuthHandler),
 	)).Methods("POST")
+
+	// admin - update dog
+	router.Handle(
+		fmt.Sprintf("%s/api/admin/dog", cfg.Server.BaseURL),
+		oktaAuth.SecuredHandler(
+			HandlerWithContext(handlers.UpdateDogHandler),
+			HandlerWithContext(handlers.NeedAuthHandler),
+	)).Methods("PUT")
 
 	// sets the state cookie and bounces user to the Okta login page
 	router.Handle(

@@ -55,11 +55,6 @@ type Relationships struct {
   Relationships []Relationship `json:"relationships"`
 }
 
-type SetGender struct {
-  DogId int `json:"dogid"`
-  Gender string `json:"gender"`
-}
-
 type TestResult struct {
   Dog TestResultDog `json:"dog"`
   Sire *Dog `json:"sire"` // pointer allows Nil value
@@ -74,6 +69,12 @@ type TestResultDog struct {
   CecsStatus string `json:"cecsstatus"`
   OrigShakingDogStatus string `json:"origshakingdogstatus"`
   OrigCecsDogStatus string `json:"origcecsdogstatus"`
+}
+
+type UpdateDog struct {
+  DogId int `json:"dogid"`
+  Name string `json:"name"`
+  Gender string `json:"gender"`
 }
 
 func (trd *TestResultDog) AsDataDog() (*Dog) {

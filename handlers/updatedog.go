@@ -13,7 +13,7 @@ import (
 )
 
 
-func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func UpdateDogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
   // Okta JWT provides group membership info
   oktaContext := req.Context()
   username := auth.UsernameFromContext(oktaContext)
@@ -22,7 +22,7 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   // verify the user is a SLEM admin
   if !auth.IsSlemAdmin(groups) {
     log.Printf(
-      "INFO: SetGenderHandler: '%s' tried to save a new test result but does not have permission.",
+      "INFO: UpdateDogHandler: '%s' tried to update a dog but does not have permission.",
       username,
     )
     SendErrorResponse(w, ErrForbidden, "Not an admin")
@@ -30,35 +30,39 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   }
 
   // parse POST body
-  var setGender data.SetGender
-  err := json.NewDecoder(req.Body).Decode(&setGender)
+  var details data.UpdateDog
+  err := json.NewDecoder(req.Body).Decode(&details)
   if err != nil {
     SendErrorResponse(w, ErrBadRequest, "Invalid body")
     return
   }
-  if !data.StringInSlice([]string{"D", "B", "U"}, setGender.Gender) {
+  if len(details.Name) == 0 {
+    SendErrorResponse(w, ErrBadRequest, "Invalid body")
+    return
+  }
+  if !data.StringInSlice([]string{"D", "B", "U"}, details.Gender) {
     SendErrorResponse(w, ErrBadRequest, "Invalid gender")
     return
   }
 
   // do not allow gender change if dog has parented children
   var families []data.Family
-  dog, err := db.GetDog(ctx.DBConn, setGender.DogId)
+  dog, err := db.GetDog(ctx.DBConn, details.DogId)
   if err == sql.ErrNoRows {
     SendErrorResponse(w, ErrBadRequest, "Dog not found")
     return
   } else if err != nil {
-    log.Printf("ERROR: SetGenderHandler: GetDog error - %v", err)
+    log.Printf("ERROR: UpdateDogHandler: GetDog error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
   if dog.Gender == "D" {
-    families, err = db.GetFamiliesOfSire(ctx.DBConn, setGender.DogId)
+    families, err = db.GetFamiliesOfSire(ctx.DBConn, details.DogId)
   } else if dog.Gender == "B" {
-    families, err = db.GetFamiliesOfDam(ctx.DBConn, setGender.DogId)
+    families, err = db.GetFamiliesOfDam(ctx.DBConn, details.DogId)
   }
   if err != nil {
-    log.Printf("ERROR: SetGenderHandler: GetFamiliesOfSire/Dam error - %v", err)
+    log.Printf("ERROR: UpdateDogHandler: GetFamiliesOfSire/Dam error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
@@ -70,16 +74,19 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   // start Tx
   txConn, err := ctx.DBConn.BeginReadUncommitted(nil)
   if err != nil {
-    log.Printf("ERROR: SetGenderHandler: Tx Begin error - %v", err)
+    log.Printf("ERROR: UpdateDogHandler: Tx Begin error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
   defer txConn.Rollback()
 
-  // update gender
-  err = db.UpdateGender(txConn, setGender.DogId, setGender.Gender, username)
-  if err != nil {
-    log.Printf("ERROR: SetGenderHandler: UpdateGender error - %v", err)
+  // update details
+  err = db.UpdateDog(txConn, details.DogId, details.Name, details.Gender, username)
+  if err == db.ErrUniqueViolation {
+    SendErrorResponse(w, ErrDogExists, details.Name)
+    return
+  } else if err != nil {
+    log.Printf("ERROR: UpdateDogHandler: UpdateDog error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }
@@ -87,7 +94,7 @@ func SetGenderHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerCont
   // commit Tx
   err = txConn.Commit()
   if err != nil {
-    log.Printf("ERROR: SetGenderHandler: Tx Commit error - %v", err)
+    log.Printf("ERROR: UpdateDogHandler: Tx Commit error - %v", err)
     SendErrorResponse(w, ErrServerError, "Database error")
     return
   }

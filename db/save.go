@@ -30,7 +30,7 @@ func SaveNewDog(dbConn *Connection, dog *data.Dog, actor string) error {
   err := dbConn.QueryRow(
     "CALL SaveNewDog(?, ?, ?, ?)",
     data.Left(dog.Name, 180),
-    dog.Gender[0],
+    data.Left(dog.Gender, 1),
     data.Left(dog.ShakingDogStatus, 50),
     data.Left(dog.CecsStatus, 50),
   ).Scan(&dog.Id)
@@ -41,9 +41,9 @@ func SaveNewDog(dbConn *Connection, dog *data.Dog, actor string) error {
     dbConn,
     actor,
     fmt.Sprintf("Saved new dog; Name = '%s'; Gender = '%s'; SLEM Status = '%s'",
-      dog.Name,
-      dog.Gender,
-      dog.ShakingDogStatus,
+      data.Left(dog.Name, 180),
+      data.Left(dog.Gender, 1),
+      data.Left(dog.ShakingDogStatus, 50),
     ),
   )
   if err != nil {
@@ -101,19 +101,20 @@ func SaveRelationship(dbConn *Connection, sireId, damId, childId int, actor stri
   return nil
 }
 
-func UpdateGender(dbConn *Connection, dogId int, gender, actor string) error {
+func UpdateDog(dbConn *Connection, dogId int, name, gender, actor string) error {
   // grab name of dog for audit entry
   dog, err := GetDog(dbConn, dogId)
   if err != nil {
     return TranslateError(err)
   }
 
-  // updates the gender of an existing dog
+  // updates the name and gender of an existing dog
   _, err = dbConn.Exec(`
     UPDATE dog
-    SET gender = ?
+    SET name = ?, gender = ?
     WHERE id = ?`,
-    gender[0],
+    data.Left(name, 180),
+    data.Left(gender, 1),
     dogId,
   )
   if err != nil {
@@ -124,10 +125,11 @@ func UpdateGender(dbConn *Connection, dogId int, gender, actor string) error {
   err = SaveAuditEntry(
     dbConn,
     actor,
-    fmt.Sprintf("Updated gender of dog; Name = '%s'; Gender '%s' => '%s'",
+    fmt.Sprintf("Updated dog details; Name = '%s' => '%s'; Gender '%s' => '%s'",
       dog.Name,
+      data.Left(name, 180),
       dog.Gender,
-      gender,
+      data.Left(gender, 1),
     ),
   )
   return nil
@@ -240,7 +242,7 @@ func UpdateSlemStatus(dbConn *Connection, dog *data.Dog, status, actor string) e
     fmt.Sprintf("Updated SLEM status for dog; Name = '%s'; Status '%s' => '%s'",
       dog.Name,
       oldDog.ShakingDogStatus,
-      status,
+      data.Left(status, 50),
     ),
   )
   if err != nil {
@@ -282,7 +284,7 @@ func UpdateStatusesAndFlags(dbConn *Connection, dog *data.TestResultDog, actor s
     fmt.Sprintf("Updated SLEM status for dog; Name = '%s'; Status '%s' => '%s'",
       dog.Name,
       oldDog.ShakingDogStatus,
-      dog.ShakingDogStatus,
+      data.Left(dog.ShakingDogStatus, 50),
     ),
   )
   if err != nil {
