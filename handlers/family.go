@@ -11,7 +11,7 @@ import (
 )
 
 
-func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func FamilyHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
   // validate query params
   params, err := ParseAndUnescape(req.URL.RawQuery)
   if err != nil {

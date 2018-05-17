@@ -11,7 +11,7 @@ import (
 )
 
 
-func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func NewLitterHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
   // Okta JWT provides group membership info
   oktaContext := req.Context()
   username := auth.UsernameFromContext(oktaContext)

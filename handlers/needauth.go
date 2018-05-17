@@ -9,7 +9,7 @@ import (
 )
 
 
-func NeedAuthHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func NeedAuthHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
   // Invoked whenever a secured handler needs Okta auth
 
   // tell API caller to redirect to the app login path

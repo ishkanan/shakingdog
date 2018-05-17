@@ -11,7 +11,7 @@ import (
 )
 
 
-func DogsHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func DogsHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
   // fetch all dogs
   dogs, err := db.GetDogs(ctx.DBConn)
   if err == sql.ErrNoRows {

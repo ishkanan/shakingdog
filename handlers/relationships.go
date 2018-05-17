@@ -11,7 +11,7 @@ import (
 )
 
 
-func RelationshipsHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func RelationshipsHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
   // fetch all relationships
   rships, err := db.GetRelationships(ctx.DBConn)
   if err == sql.ErrNoRows {

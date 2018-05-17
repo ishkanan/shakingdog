@@ -13,7 +13,7 @@ import (
 )
 
 
-func UpdateDogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func UpdateDogHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
   // Okta JWT provides group membership info
   oktaContext := req.Context()
   username := auth.UsernameFromContext(oktaContext)

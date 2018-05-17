@@ -6,7 +6,7 @@ import (
   "bitbucket.org/Rusty1958/shakingdog/db"
 )
 
-type HandlerContext struct {
+type Context struct {
   Config *config.Config
   DBConn *db.Connection
   Okta *auth.Okta

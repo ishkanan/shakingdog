@@ -14,7 +14,7 @@ import (
 )
 
 
-func DogHandler(w http.ResponseWriter, req *http.Request, ctx *HandlerContext) {
+func DogHandler(w http.ResponseWriter, req *http.Request, ctx *Context) {
   // get dog based on supplied ID
   vars := mux.Vars(req)
   dogId, _ := strconv.Atoi(vars["id"])

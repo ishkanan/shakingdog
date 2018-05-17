@@ -21,9 +21,7 @@ import (
 
 var (
 	confFile string
-	// this doubles as global store for the things we
-	// need to pass to the request handlers
-	handlerContext *handlers.HandlerContext
+	handlerContext *handlers.Context
 )
 
 
@@ -50,7 +48,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error reading configuration file - %v", err)
 	}
-	handlerContext = &handlers.HandlerContext{Config: cfg}
+	handlerContext = &handlers.Context{Config: cfg}
 
 	// read the CA file once instead of every request
 	// get the lists of certs and keys
@@ -125,73 +123,73 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	// all dogs fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/dogs", cfg.Server.BaseURL),
-		HandlerWithContext(handlers.DogsHandler),
+		handlers.WithContext(handlerContext, handlers.DogsHandler),
 	).Methods("GET")
 
 	// single dog fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/dog/{id:[0-9]+}", cfg.Server.BaseURL),
-		HandlerWithContext(handlers.DogHandler),
+		handlers.WithContext(handlerContext, handlers.DogHandler),
 	).Methods("GET")
 
 	// family fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/family", cfg.Server.BaseURL),
-		HandlerWithContext(handlers.FamilyHandler),
+		handlers.WithContext(handlerContext, handlers.FamilyHandler),
 	).Methods("GET")
 
 	// relationships fetch
 	router.Handle(
 		fmt.Sprintf("%s/api/relationships", cfg.Server.BaseURL),
-		HandlerWithContext(handlers.RelationshipsHandler),
+		handlers.WithContext(handlerContext, handlers.RelationshipsHandler),
 	).Methods("GET")
 	
 	// handy Okta check
 	router.Handle(
 		fmt.Sprintf("%s/auth", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(handlers.AuthCheckHandler),
-			HandlerWithContext(handlers.NeedAuthHandler),
+			handlers.WithAdminContext(handlerContext, handlers.AuthCheckHandler),
+			handlers.WithContext(handlerContext, handlers.NeedAuthHandler),
 	)).Methods("GET")
 
 	// admin - audit
 	router.Handle(
 		fmt.Sprintf("%s/api/admin/audit", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(handlers.AuditHandler),
-			HandlerWithContext(handlers.NeedAuthHandler),
+			handlers.WithAdminContext(handlerContext, handlers.AuditHandler),
+			handlers.WithContext(handlerContext, handlers.NeedAuthHandler),
 	)).Methods("GET")
 
 	// admin - new dog
 	router.Handle(
 		fmt.Sprintf("%s/api/admin/dog", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(handlers.NewDogHandler),
-			HandlerWithContext(handlers.NeedAuthHandler),
+			handlers.WithAdminContext(handlerContext, handlers.NewDogHandler),
+			handlers.WithContext(handlerContext, handlers.NeedAuthHandler),
 	)).Methods("POST")
 
 	// admin - new litter
 	router.Handle(
 		fmt.Sprintf("%s/api/admin/litter", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(handlers.NewLitterHandler),
-			HandlerWithContext(handlers.NeedAuthHandler),
+			handlers.WithAdminContext(handlerContext, handlers.NewLitterHandler),
+			handlers.WithContext(handlerContext, handlers.NeedAuthHandler),
 	)).Methods("POST")
 
 	// admin - test result
 	router.Handle(
 		fmt.Sprintf("%s/api/admin/testresult", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(handlers.TestResultHandler),
-			HandlerWithContext(handlers.NeedAuthHandler),
+			handlers.WithAdminContext(handlerContext, handlers.TestResultHandler),
+			handlers.WithContext(handlerContext, handlers.NeedAuthHandler),
 	)).Methods("POST")
 
 	// admin - update dog
 	router.Handle(
 		fmt.Sprintf("%s/api/admin/dog", cfg.Server.BaseURL),
 		oktaAuth.SecuredHandler(
-			HandlerWithContext(handlers.UpdateDogHandler),
-			HandlerWithContext(handlers.NeedAuthHandler),
+			handlers.WithAdminContext(handlerContext, handlers.UpdateDogHandler),
+			handlers.WithContext(handlerContext, handlers.NeedAuthHandler),
 	)).Methods("PUT")
 
 	// sets the state cookie and bounces user to the Okta login page
@@ -215,11 +213,4 @@ func BuildRouter(cfg *config.Config, oktaAuth *auth.Okta) http.Handler {
 	)).Methods("GET")
 
 	return router
-}
-
-func HandlerWithContext(handler func(http.ResponseWriter, *http.Request, *handlers.HandlerContext)) (http.Handler) {
-	return http.HandlerFunc(func(w http.ResponseWriter, q *http.Request) {
-		// hand our context to the handler function
-		handler(w, q, handlerContext)
-	})
 }
