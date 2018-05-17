@@ -16,7 +16,7 @@ func SaveAuditEntry(dbConn *Connection, actor, action string) error {
   _, err := dbConn.Exec(`
     INSERT INTO audit (actor, action)
     VALUES (?, ?)`,
-    actor,
+    data.Left(actor, 50),
     action,
   )
   if err != nil {
@@ -29,10 +29,10 @@ func SaveNewDog(dbConn *Connection, dog *data.Dog, actor string) error {
   // saves a new dog
   err := dbConn.QueryRow(
     "CALL SaveNewDog(?, ?, ?, ?)",
-    dog.Name,
-    dog.Gender,
-    dog.ShakingDogStatus,
-    dog.CecsStatus,
+    data.Left(dog.Name, 180),
+    dog.Gender[0],
+    data.Left(dog.ShakingDogStatus, 50),
+    data.Left(dog.CecsStatus, 50),
   ).Scan(&dog.Id)
   if err != nil {
     return TranslateError(err)
@@ -113,7 +113,7 @@ func UpdateGender(dbConn *Connection, dogId int, gender, actor string) error {
     UPDATE dog
     SET gender = ?
     WHERE id = ?`,
-    gender,
+    gender[0],
     dogId,
   )
   if err != nil {
@@ -224,8 +224,8 @@ func UpdateSlemStatus(dbConn *Connection, dog *data.Dog, status, actor string) e
   _, err = dbConn.Exec(
     "CALL UpdateStatusesAndFlags(?, ?, ?, ?, ?)",
     dog.Id,
-    status,
-    dog.CecsStatus,
+    data.Left(status, 50),
+    data.Left(dog.CecsStatus, 50),
     false,
     false,
   )
@@ -266,8 +266,8 @@ func UpdateStatusesAndFlags(dbConn *Connection, dog *data.TestResultDog, actor s
   _, err = dbConn.Exec(
     "CALL UpdateStatusesAndFlags(?, ?, ?, ?, ?)",
     dog.Id,
-    dog.ShakingDogStatus,
-    dog.CecsStatus,
+    data.Left(dog.ShakingDogStatus, 50),
+    data.Left(dog.CecsStatus, 50),
     overrideShakingDogInfer,
     overrideCecsInfer,
   )
