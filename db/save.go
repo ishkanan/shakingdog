@@ -125,7 +125,7 @@ func UpdateDog(dbConn *Connection, dogId int, name, gender, actor string) error 
   err = SaveAuditEntry(
     dbConn,
     actor,
-    fmt.Sprintf("Updated dog details; Name = '%s' => '%s'; Gender '%s' => '%s'",
+    fmt.Sprintf("Updated details; Name = '%s' => '%s'; Gender '%s' => '%s'",
       dog.Name,
       data.Left(name, 180),
       dog.Gender,
@@ -239,7 +239,7 @@ func UpdateSlemStatus(dbConn *Connection, dog *data.Dog, status, actor string) e
   err = SaveAuditEntry(
     dbConn,
     actor,
-    fmt.Sprintf("Updated SLEM status for dog; Name = '%s'; Status '%s' => '%s'",
+    fmt.Sprintf("Updated SLEM status; Name = '%s'; Status '%s' => '%s'",
       dog.Name,
       oldDog.ShakingDogStatus,
       data.Left(status, 50),
@@ -281,7 +281,7 @@ func UpdateStatusesAndFlags(dbConn *Connection, dog *data.TestResultDog, actor s
   err = SaveAuditEntry(
     dbConn,
     actor,
-    fmt.Sprintf("Updated SLEM status for dog; Name = '%s'; Status '%s' => '%s'",
+    fmt.Sprintf("Updated SLEM status; Name = '%s'; Status '%s' => '%s'",
       dog.Name,
       oldDog.ShakingDogStatus,
       data.Left(dog.ShakingDogStatus, 50),
