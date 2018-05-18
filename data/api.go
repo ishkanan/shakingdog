@@ -41,6 +41,12 @@ type GenericConfirm struct {
   Result string `json:"result"`
 }
 
+type NewDog struct {
+  Dog *Dog `json:"dog"`
+  Sire *Dog `json:"sire"`
+  Dam *Dog `json:"dam"`
+}
+
 type NewLitter struct {
   Sire Dog `json:"sire"`
   Dam Dog `json:"dam"`
